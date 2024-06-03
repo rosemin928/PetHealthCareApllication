@@ -13,6 +13,33 @@
         android:theme="@style/Theme.PetHealthApplication"
         tools:targetApi="31">
         <activity
+            android:name=".NaviActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Register7Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Resgister7Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Register6Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Register5Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Register4Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Register3Activity"
+            android:exported="false" />
+        <activity
+            android:name=".Register2Activity"
+            android:exported="false" />
+        <activity
             android:name=".Register1Activity"
             android:exported="false" />
         <activity
