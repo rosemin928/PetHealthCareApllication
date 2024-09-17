@@ -3,20 +3,30 @@ package com.example.pethealthapplication
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.ImageButton
+import android.widget.Button
+import com.example.pethealthapplication.register.Register0Activity
 
 class StartActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
-        val kakao_login_button = findViewById<ImageButton>(R.id.kakao_login_button)
+        val loginBtn = findViewById<Button>(R.id.loginBtn)
 
-        kakao_login_button.setOnClickListener {
-            val intent = Intent(this@StartActivity, JoinActivity::class.java)
+        loginBtn.setOnClickListener {
+            val intent = Intent(this@StartActivity, LoginActivity::class.java)
 
             startActivity(intent)
         }
+
+        val joinBtn = findViewById<Button>(R.id.joinBtn)
+
+        joinBtn.setOnClickListener {
+            val intent = Intent(this@StartActivity, JoinIdActivity::class.java)
+
+            startActivity(intent)
+        }
+
     }
 
 }

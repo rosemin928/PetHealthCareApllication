@@ -2,51 +2,130 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PetHealthApplication"
         tools:targetApi="31">
         <activity
-            android:name=".NaviActivity"
+            android:name=".TargetWalkingTimeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".diabetescheck.DiabetesCheck4Activity"
+            android:exported="false" />
+        <activity
+            android:name=".diabetescheck.DiabetesCheck3Activity"
+            android:exported="false" />
+        <activity
+            android:name=".diabetescheck.DiabetesCheck2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".diabetescheck.DiabetesCheck1Activity"
+            android:exported="false" />
+        <activity
+            android:name=".diabetescheck.DiabetesCheck0Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck6Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck0Activity"
+            android:exported="false" />
+        <activity
+            android:name=".NextHospitalVisitActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DailyReportActivity"
+            android:exported="false" />
+
+        <receiver android:name=".InsulinAlarmReceiver" />
+
+        <activity
+            android:name=".PetProfilePageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginAfterJoinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck7Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck5Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck4Activity"
+            android:exported="false" />
+        <activity
+            android:name=".UserDeleteActivity"
+            android:exported="false" />
+        <activity
+            android:name=".register.Register9Activity"
+            android:exported="false" />
+        <activity
+            android:name=".register.Register6Activity"
+            android:exported="false" />
+        <activity
+            android:name=".PasswordChangeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NicknameChangeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck3Activity"
+            android:exported="false" />
+        <activity
+            android:name=".obesitycheck.ObesityCheck1Activity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".JoinIdActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".register.Register8Activity"
             android:exported="false" />
         <activity
-            android:name=".Register7Activity"
+            android:name=".register.Register7Activity"
             android:exported="false" />
         <activity
-            android:name=".Resgister7Activity"
+            android:name=".register.Register5Activity"
             android:exported="false" />
         <activity
-            android:name=".Register6Activity"
+            android:name=".register.Register4Activity"
             android:exported="false" />
         <activity
-            android:name=".Register5Activity"
+            android:name=".register.Register3Activity"
             android:exported="false" />
         <activity
-            android:name=".Register4Activity"
+            android:name=".register.Register2Activity"
             android:exported="false" />
         <activity
-            android:name=".Register3Activity"
+            android:name=".register.Register1Activity"
             android:exported="false" />
         <activity
-            android:name=".Register2Activity"
+            android:name=".register.Register0Activity"
             android:exported="false" />
         <activity
-            android:name=".Register1Activity"
-            android:exported="false" />
-        <activity
-            android:name=".Register0Activity"
-            android:exported="false" />
-        <activity
-            android:name=".JoinActivity"
+            android:name=".JoinSimpleActivity"
             android:exported="false" />
         <activity
             android:name=".SplashActivity"

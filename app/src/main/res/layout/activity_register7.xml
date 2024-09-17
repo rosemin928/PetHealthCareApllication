@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Register7Activity">
+    tools:context=".register.Register8Activity">
 
     <ImageView
+        android:id="@+id/imageView"
         android:layout_width="250dp"
         android:layout_height="200dp"
         android:src="@drawable/doctor"
@@ -32,10 +33,10 @@
         app:layout_constraintVertical_bias="0.039" />
 
     <View
+        android:id="@+id/view2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="72dp"
-        android:layout_marginBottom="246dp"
         android:background="#A4A4A4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,101 +47,138 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="가장 최근 심장사상충 주사/약 복용 날짜를\n알려주세요"
+        android:text="반려동물의 당뇨 진단 여부를 알려주세요"
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.262"
+        app:layout_constraintHorizontal_bias="0.216"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.445" />
+        app:layout_constraintVertical_bias="0.442" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/yes"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:background="@drawable/button_color_drawable"
+        android:gravity="center"
+        android:text="당뇨 진단 O"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.061"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.516" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/no"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:background="@drawable/button_color_drawable"
+        android:gravity="center"
+        android:text="당뇨 진단 X"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.731"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.516" />
 
     <RadioButton
-        android:id="@+id/injection"
+        android:id="@+id/insulinTime1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="주사"
+        android:text="인슐린 시간 1"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.045"
+        app:layout_constraintHorizontal_bias="0.039"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.543" />
+        app:layout_constraintVertical_bias="0.633" />
 
     <TextView
-        android:id="@+id/injection_text"
-        android:layout_width="200dp"
-        android:layout_height="40dp"
-        android:background="@drawable/custom_textview"
+        android:id="@+id/insulinTime1Text"
+        android:layout_width="150dp"
+        android:layout_height="30dp"
+        android:background="@drawable/custom_textview2"
+        android:gravity="left|center_vertical"
+        android:includeFontPadding="false"
         android:padding="2dp"
         android:textColor="@android:color/black"
         android:textSize="18sp"
-        android:includeFontPadding="false"
-        android:gravity="left|center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.075"
+        app:layout_constraintHorizontal_bias="0.580"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.606" />
-
-    <ImageView
-        android:id="@+id/calendar_btn"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        android:src="@drawable/calender"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.573"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.605" />
+        app:layout_constraintVertical_bias="0.633" />
 
     <RadioButton
-        android:id="@+id/medicine"
+        android:id="@+id/insulinTime2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="약"
+        android:text="인슐린 시간 2"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintHorizontal_bias="0.039"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.711" />
+        app:layout_constraintVertical_bias="0.693" />
 
     <TextView
-        android:id="@+id/medicine_text"
-        android:layout_width="200dp"
-        android:layout_height="40dp"
-        android:background="@drawable/custom_textview"
-        android:padding="16dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.075"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.772" />
-
-    <ImageView
-        android:id="@+id/calendar_btn2"
-        android:layout_width="30dp"
+        android:id="@+id/insulinTime2Text"
+        android:layout_width="150dp"
         android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        android:src="@drawable/calender"
+        android:background="@drawable/custom_textview2"
+        android:gravity="left|center_vertical"
+        android:includeFontPadding="false"
+        android:padding="2dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.573"
+        app:layout_constraintHorizontal_bias="0.580"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.77" />
+        app:layout_constraintVertical_bias="0.693" />
+
+    <RadioButton
+        android:id="@+id/insulinTime3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="인슐린 시간 3"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.039"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.753" />
+
+    <TextView
+        android:id="@+id/insulinTime3Text"
+        android:layout_width="150dp"
+        android:layout_height="30dp"
+        android:background="@drawable/custom_textview2"
+        android:gravity="left|center_vertical"
+        android:includeFontPadding="false"
+        android:padding="2dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.580"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.753" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/next_button"
@@ -150,13 +188,13 @@
         android:gravity="center"
         android:textColor="#ffffff"
         android:textSize="20dp"
-        android:background="@drawable/button_draw"
+        android:background="@drawable/button_color_change"
+        android:enabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.93"/>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

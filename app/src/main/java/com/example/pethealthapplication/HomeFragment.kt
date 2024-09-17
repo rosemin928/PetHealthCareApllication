@@ -1,59 +1,950 @@
 package com.example.pethealthapplication
 
+import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import com.example.pethealthapplication.dailyreportapi.DailyReportApiClient
+import com.example.pethealthapplication.dailyreportapi.DailyReportApiService
+import com.example.pethealthapplication.dto.DailyReportDTO
+import com.example.pethealthapplication.dto.PetProfileSummaryDTO
+import com.example.pethealthapplication.dto.ResponseDTO
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiClient
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiService
+import com.github.mikephil.charting.charts.LineChart
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.math.BigDecimal
+import java.time.LocalDate
+import android.graphics.Color
+import android.widget.Button
+import android.widget.EditText
+import com.example.pethealthapplication.dto.BloodSugarLevelDTO
+import com.example.pethealthapplication.dto.PetWeightDTO
+import com.example.pethealthapplication.dto.ResponseListDTO
+import com.example.pethealthapplication.dto.TargetWeightDTO
+import com.example.pethealthapplication.graph.GraphApiClient
+import com.example.pethealthapplication.graph.GraphApiService
+import com.example.pethealthapplication.weightapi.WeightApiService
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import android.text.Editable
+import android.text.TextWatcher
+import com.example.pethealthapplication.dto.RecommendedKcalCheckDTO
+import com.example.pethealthapplication.obesitycheck.ObesityCheck0Activity
+import com.example.pethealthapplication.weightapi.WeightApiClient
+import com.github.mikephil.charting.components.LimitLine
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import java.util.Calendar
+import java.util.Locale
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private lateinit var petNameText: TextView
+    private lateinit var petAgeText: TextView
+    private lateinit var petWeightText: TextView
+
+    private lateinit var obesityCheck: TextView
+    private lateinit var recommendCaloriesLayout: LinearLayout
+    private lateinit var recommendDateLayout: LinearLayout
+    private lateinit var recommendedKcal: TextView
+    private lateinit var recommendedDate: TextView
+
+    private var memoDate: LocalDate? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
+
+
+
+
+        // 1. 반려동물 정보 요약 조회
+        petNameText = view.findViewById(R.id.petName)
+        petAgeText = view.findViewById(R.id.petAge)
+        petWeightText = view.findViewById(R.id.petWeight)
+
+        val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        val userId = sharedPreferences.getString("USER_ID_KEY", null)
+
+        Log.d("HomeFragment", "userId: $userId")
+
+        if (userId != null) {
+            // Retrofit API 서비스 가져오기
+            val apiService = PetProfileSummaryApiClient.getApiService(requireContext())
+
+            //(1) 사용자 ID로 petId 가져오기
+            apiService.getPetIdByUserId(userId)
+                .enqueue(object : Callback<ResponseDTO<List<String>>> {
+                    override fun onResponse(
+                        call: Call<ResponseDTO<List<String>>>,
+                        response: Response<ResponseDTO<List<String>>>
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseDTO = response.body()
+                            val petIdList = responseDTO?.data
+                            val petId = petIdList?.firstOrNull() // 리스트에서 첫 번째 petId를 가져옴
+
+                            if (petId != null) {
+                                Log.d("HomeFragment", "petId: $petId")
+
+                                // petId를 SharedPreferences에 저장
+                                val editor = sharedPreferences.edit()
+                                editor.putString("PET_ID_KEY", petId)
+                                editor.apply()
+
+                                //(2) 반려동물 요약 정보 조회하기
+                                fetchPetProfileSummary(petId, apiService)
+
+                                //(3) 오늘 날짜의 메모를 조회 & 버튼 가시성 설정
+                                fetchDailyReport(
+                                    sharedPreferences,
+                                    view.findViewById(R.id.diagnosisText),
+                                    view.findViewById(R.id.medicineText),
+                                    view.findViewById(R.id.petKgText),
+                                    view.findViewById(R.id.bloodSugarText),
+                                    view.findViewById(R.id.specialMemoText)
+                                )
+                            } else {
+                                // petId가 없을 때 처리
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Pet ID를 가져올 수 없습니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            // 실패 응답 처리
+                            Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseDTO<List<String>>>, t: Throwable) {
+                        Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        } else {
+            Toast.makeText(requireContext(), "사용자 ID가 저장되어 있지 않습니다.", Toast.LENGTH_SHORT).show()
+        }
+
+
+
+
+        // 2. 그래프
+        val petId = sharedPreferences.getString("PET_ID_KEY", null)
+        val graphApiService = GraphApiClient.getApiService(requireContext())
+        val weightApiService = WeightApiClient.getApiService(requireContext())
+
+        val bloodSugarGraph = view.findViewById<TextView>(R.id.bloodSugarGraph)
+        val weightGraph = view.findViewById<TextView>(R.id.weightGraph)
+
+        if (petId != null) {
+
+            //기본은 혈당그래프
+            fetchBloodSugarLevel(petId, graphApiService)
+
+            bloodSugarGraph.setOnClickListener {
+                fetchBloodSugarLevel(petId, graphApiService)
+            }
+            weightGraph.setOnClickListener {
+                fetchWeight(petId, graphApiService, weightApiService)
+            }
+        }
+        else {
+            updateLineChartWithBloodSugar(emptyList()) //petId가 없을 때는 빈 그래프
+            updateLineChartWithWeight(emptyList(), null)
+        }
+
+
+
+
+        // 3. 반려동물 프로필 정보 페이지로 이동
+        val profileEditButton = view.findViewById<ImageView>(R.id.profileEditBtn)
+        profileEditButton.setOnClickListener {
+            val intent = Intent(requireActivity(), PetProfilePageActivity::class.java)
+            startActivity(intent)
+        }
+
+
+
+        // 4. 비만도 체크 버튼
+        obesityCheck = view.findViewById(R.id.obesityCheck)
+        obesityCheck.setOnClickListener {
+            val intent = Intent(requireActivity(), ObesityCheck0Activity::class.java)
+            startActivity(intent)
+        }
+
+
+
+        // 5. 하루 적정 칼로리 조회
+        recommendCaloriesLayout = view.findViewById(R.id.recommendCaloriesLayout)
+        recommendDateLayout = view.findViewById(R.id.recommendDateLayout)
+        recommendedKcal = view.findViewById(R.id.recommendedCalories)
+        recommendedDate = view.findViewById(R.id.recommendedDate)
+
+        if (petId != null)
+            recommendedCaloriesCheck(petId, weightApiService)
+
+
+
+
+
+        // 6. 목표 몸무게 설정 + 조회 + 삭제
+        // 목표 몸무게 저장 + 수정
+        val targetWeightAddButton = view.findViewById<ImageView>(R.id.targetWeightAddBtn)
+        val targetWeightEditButton = view.findViewById<ImageView>(R.id.targetWeightEditBtn)
+        targetWeightAddButton.setOnClickListener {
+            if (petId != null)
+                showTargetWeightDialog(petId, weightApiService)
+        }
+        targetWeightEditButton.setOnClickListener {
+            if (petId != null)
+                showTargetWeightDialog(petId, weightApiService)
+        }
+
+        //목표 몸무게 삭제
+        val targetWeightDeleteButton = view.findViewById<ImageView>(R.id.targetWeightDeleteBtn)
+        targetWeightDeleteButton.setOnClickListener {
+            if (petId != null)
+                targetWeightDelete(petId, weightApiService)
+        }
+
+        // 목표 몸무게 체크 및 UI 업데이트
+        targetWeightCheck(petId ?: "", weightApiService) { targetWeight ->
+            val targetWeightText = view.findViewById<TextView>(R.id.targetWeightText)
+            val targetWeightShow = view.findViewById<TextView>(R.id.targetWeightShow)
+            val targetWeightGuide1 = view.findViewById<TextView>(R.id.targetWeightGuide1)
+            val targetWeightGuide2 = view.findViewById<TextView>(R.id.targetWeightGuide2)
+            val targetWeightGuide3 = view.findViewById<TextView>(R.id.targetWeightGuide3)
+
+            if (targetWeight != null) {
+                currentWeightCheck(petId ?: "", weightApiService) { currentWeight ->
+                    if (currentWeight != null) {
+                        // 목표 몸무게가 존재할 때 targetWeigthText 숨기기
+                        targetWeightText.visibility = View.GONE
+                        targetWeightAddButton.visibility = View.GONE
+
+                        targetWeightShow.visibility = View.VISIBLE
+
+                        if (targetWeight >= currentWeight) {
+                            targetWeightShow.text = String.format(Locale.getDefault(), "%.2f", targetWeight - currentWeight) // 목표 몸무게까지의 감량or증량 kg을 표시
+                        } else {
+                            targetWeightShow.text = String.format(Locale.getDefault(), "%.2f", currentWeight - targetWeight) // 목표 몸무게까지의 감량or증량 kg을 표시
+                        }
+
+
+                        targetWeightEditButton.visibility = View.VISIBLE
+                        targetWeightDeleteButton.visibility = View.VISIBLE
+                        targetWeightGuide1.visibility = View.VISIBLE
+                        targetWeightGuide2.visibility = View.VISIBLE
+                        targetWeightGuide3.visibility = View.VISIBLE
+                    }
+                }
+            } else {
+                // 목표 몸무게가 없으면 보여주기
+                targetWeightText.visibility = View.VISIBLE
+                targetWeightAddButton.visibility = View.VISIBLE
+
+                targetWeightShow.visibility = View.GONE
+                targetWeightEditButton.visibility = View.GONE
+                targetWeightDeleteButton.visibility = View.GONE
+                targetWeightGuide1.visibility = View.GONE
+                targetWeightGuide2.visibility = View.GONE
+                targetWeightGuide3.visibility = View.GONE
+            }
+        }
+
+
+
+
+        // 7. 메모 추가하기 & 수정하기 & 삭제하기
+        //(1) memoDateSelect 누르면 날짜 선택
+        val memoDateSelect = view.findViewById<LinearLayout>(R.id.memoDateSelect)
+        val memoDateSelectText = view.findViewById<TextView>(R.id.memoDateSelectText)
+
+        // 오늘 날짜를 기본값으로 설정
+        val currentDate = LocalDate.now()
+        memoDate = currentDate
+        memoDateSelectText.text = String.format(
+            "%02d-%02d-%02d",
+            currentDate.year,
+            currentDate.monthValue,
+            currentDate.dayOfMonth
+        )
+
+        // 메모 조회 텍스트뷰
+        val diagnosisText = view.findViewById<TextView>(R.id.diagnosisText)
+        val medicineText = view.findViewById<TextView>(R.id.medicineText)
+        val petKgText = view.findViewById<TextView>(R.id.petKgText)
+        val bloodSugarText = view.findViewById<TextView>(R.id.bloodSugarText)
+        val specialMemoText = view.findViewById<TextView>(R.id.specialMemoText)
+
+        // 오늘 날짜의 메모를 먼저 조회
+        fetchDailyReport(
+            sharedPreferences,
+            diagnosisText,
+            medicineText,
+            petKgText,
+            bloodSugarText,
+            specialMemoText
+        )
+
+        // DatePickerDialog를 통해 날짜를 선택할 때 업데이트
+        memoDateSelect.setOnClickListener {
+            val datePickerDialog = DatePickerDialog(requireContext(), { _, year, month, day ->
+                memoDate = LocalDate.of(year, month + 1, day)
+                memoDateSelectText.text = String.format("%02d-%02d-%02d", year, month + 1, day)
+
+                // 날짜가 변경될 때마다 메모 조회 및 버튼 가시성 설정
+                fetchDailyReport(
+                    sharedPreferences,
+                    diagnosisText,
+                    medicineText,
+                    petKgText,
+                    bloodSugarText,
+                    specialMemoText
+                )
+            }, currentDate.year, currentDate.monthValue - 1, currentDate.dayOfMonth)
+            datePickerDialog.show()
+        }
+
+        //(2) addButton -> 메모 추가
+        //    editButton -> 메모 수정
+        //    deleteButton -> 메모 삭제
+        val memoAddButton = view.findViewById<ImageView>(R.id.memoAddBtn)
+        val memoEditButton = view.findViewById<ImageView>(R.id.memoEditBtn)
+        val memoDeleteButton = view.findViewById<ImageView>(R.id.memoDeleteBtn)
+
+        // 메모 추가 버튼 클릭 시
+        memoAddButton.setOnClickListener {
+            val intent = Intent(requireContext(), DailyReportActivity::class.java)
+            intent.putExtra("ACTION_TYPE", "ADD") // 추가 동작
+            intent.putExtra("DATE", memoDate.toString()) // 필요에 따라 날짜 또는 다른 식별자 전달
+            startActivity(intent)
+        }
+
+        // 메모 수정 버튼 클릭 시
+        memoEditButton.setOnClickListener {
+            val intent = Intent(requireContext(), DailyReportActivity::class.java)
+            intent.putExtra("ACTION_TYPE", "EDIT") // 수정 동작
+            intent.putExtra("DATE", memoDate.toString()) // 필요에 따라 날짜 또는 다른 식별자 전달
+            startActivity(intent)
+        }
+
+        memoDeleteButton.setOnClickListener {
+            val dailyReportApiService = DailyReportApiClient.getApiService(requireContext())
+            memoDelete(sharedPreferences, dailyReportApiService)
+        }
+
+
+
+        // 8. 날짜별 산책 기록
+        // (1) 캘린더 커스텀
+        val calendarView = view.findViewById<MaterialCalendarView>(R.id.calendarView)
+
+        // 초기 설정
+        calendarView.addDecorator(CalendarDecorators.getTodayDecorator(requireContext()))
+        calendarView.addDecorator(CalendarDecorators.getSelectedMonthDecorator(CalendarDay.today().month, requireContext()))
+
+        // 달이 변경될 때마다 데코레이터 업데이트
+        calendarView.setOnMonthChangedListener { _, newMonth ->
+            calendarView.removeDecorators() // 기존 데코레이터 제거
+            calendarView.addDecorator(CalendarDecorators.getTodayDecorator(requireContext()))
+            calendarView.addDecorator(CalendarDecorators.getSelectedMonthDecorator(newMonth.month, requireContext()))
+        }
+
+        // (2) 목표 산책 시간 & 시각 설정
+        val targetTimeEditButton = view.findViewById<ImageView>(R.id.targetTimeEditBtn)
+        targetTimeEditButton.setOnClickListener {
+            val intent = Intent(requireContext(), TargetWalkingTimeActivity::class.java)
+            startActivity(intent)
+        }
+
+        // (3) 목표 산책 시간 & 시각 삭제
+        val targetTimeDeleteButton = view.findViewById<ImageView>(R.id.targetTimeDeleteBtn)
+
+
+
+
+        return view
+    }
+
+
+    //*기능*
+    //반려동물 요약 정보 조회
+    private fun fetchPetProfileSummary(petId: String, apiService: PetProfileSummaryApiService) {
+        apiService.petProfileSummary(petId).enqueue(object : Callback<ResponseDTO<PetProfileSummaryDTO>> {
+                override fun onResponse(call: Call<ResponseDTO<PetProfileSummaryDTO>>, response: Response<ResponseDTO<PetProfileSummaryDTO>>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseDTO = response.body()
+                        val status = responseDTO?.status
+                        val message = responseDTO?.message
+                        val data = responseDTO?.data
+
+                        // 데이터 처리
+                        if (status == 200) {
+                            val petName = data?.petName
+                            val age = data?.age
+                            val currentWeight = data?.currentWeight
+
+                            // UI 업데이트
+                            petNameText.text = petName
+                            petAgeText.text = "${age.toString()}살"
+                            petWeightText.text = "${currentWeight.toString()}kg"
+                        } else {
+                            // 실패 시 메시지 처리
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseDTO<PetProfileSummaryDTO>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+
+    //메모 조회
+    private fun fetchDailyReport(
+        sharedPreferences: SharedPreferences,
+        diagnosisText: TextView?,
+        medicineText: TextView?,
+        petKgText: TextView?,
+        bloodSugarText: TextView?,
+        specialMemoText: TextView?
+    ) {
+        val dailyReportCheckApiService = DailyReportApiClient.getApiService(requireContext())
+        val petId = sharedPreferences.getString("PET_ID_KEY", null)
+        val memoDateString = memoDate?.toString() ?: ""
+
+        // 버튼들 가져오기
+        val editButton = view?.findViewById<ImageView>(R.id.memoEditBtn)
+        val deleteButton = view?.findViewById<ImageView>(R.id.memoDeleteBtn)
+        val addButton = view?.findViewById<ImageView>(R.id.memoAddBtn)
+
+        if (petId != null) {
+            dailyReportCheckApiService.dailyReportCheck(petId, memoDateString)
+                .enqueue(object : Callback<ResponseDTO<DailyReportDTO>> {
+                    override fun onResponse(
+                        call: Call<ResponseDTO<DailyReportDTO>>,
+                        response: Response<ResponseDTO<DailyReportDTO>>
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseDTO = response.body()
+                            val data = responseDTO?.data
+
+                            if (responseDTO?.status == 200 && data != null) {
+                                // 각 필드 값이 null이거나 빈 문자열인지 확인하고, 해당 경우 "입력값이 없습니다"로 설정
+                                diagnosisText?.text =
+                                    if (data.diagnosis.isNullOrBlank()) "입력값이 없습니다" else data.diagnosis
+
+                                medicineText?.text =
+                                    if (data.medicine.isNullOrBlank()) "입력값이 없습니다" else data.medicine
+
+                                petKgText?.text =
+                                    if (data.weight == null || data.weight == BigDecimal.ZERO) "입력값이 없습니다" else data.weight.toString()
+
+                                bloodSugarText?.text =
+                                    if (data.bloodSugarLevel == null) "입력값이 없습니다" else data.bloodSugarLevel.toString()
+
+                                specialMemoText?.text =
+                                    if (data.specialNote.isNullOrBlank()) "입력값이 없습니다" else data.specialNote
+
+                                // 데이터가 존재할 경우 editBtn과 deleteBtn 보이기, addBtn 숨기기
+                                editButton?.visibility = View.VISIBLE
+                                deleteButton?.visibility = View.VISIBLE
+                                addButton?.visibility = View.GONE
+                            } else {
+                                // 메모가 없을 때 UI 초기화
+                                diagnosisText?.text = "입력값이 없습니다"
+                                medicineText?.text = "입력값이 없습니다"
+                                petKgText?.text = "입력값이 없습니다"
+                                bloodSugarText?.text = "입력값이 없습니다"
+                                specialMemoText?.text = "입력값이 없습니다"
+
+                                // 데이터가 없을 경우 editBtn과 deleteBtn 숨기기, addBtn 보이기
+                                editButton?.visibility = View.GONE
+                                deleteButton?.visibility = View.GONE
+                                addButton?.visibility = View.VISIBLE
+                            }
+                        } else {
+                            // 메모가 없을 때 UI 초기화
+                            diagnosisText?.text = "입력값이 없습니다"
+                            medicineText?.text = "입력값이 없습니다"
+                            petKgText?.text = "입력값이 없습니다"
+                            bloodSugarText?.text = "입력값이 없습니다"
+                            specialMemoText?.text = "입력값이 없습니다"
+
+                            // 데이터가 없을 경우 editBtn과 deleteBtn 숨기기, addBtn 보이기
+                            editButton?.visibility = View.GONE
+                            deleteButton?.visibility = View.GONE
+                            addButton?.visibility = View.VISIBLE
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseDTO<DailyReportDTO>>, t: Throwable) {
+                        Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+
+    //메모 삭제
+    private fun memoDelete(sharedPreferences: SharedPreferences, apiService: DailyReportApiService) {
+
+        val petId = sharedPreferences.getString("PET_ID_KEY", null)
+        val memoDateString = memoDate?.toString() ?: ""
+
+        if (petId != null) {
+            apiService.dailyReportDelete(petId, memoDateString)
+                .enqueue(object : Callback<ResponseDTO<Any>> {
+                    override fun onResponse(
+                        call: Call<ResponseDTO<Any>>,
+                        response: Response<ResponseDTO<Any>>
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseDTO = response.body()
+
+                            if (responseDTO?.status == 200) {
+                                // 요청 성공 시 토스트 메시지 표시
+                                Toast.makeText(requireContext(), "메모 삭제 성공", Toast.LENGTH_SHORT).show()
+
+                                // 메모 삭제 후 UI 초기화
+                                fetchDailyReport(
+                                    sharedPreferences,
+                                    view?.findViewById(R.id.diagnosisText),
+                                    view?.findViewById(R.id.medicineText),
+                                    view?.findViewById(R.id.petKgText),
+                                    view?.findViewById(R.id.bloodSugarText),
+                                    view?.findViewById(R.id.specialMemoText)
+                                )
+                            }
+                        } else {
+                            // 실패 시 토스트 메시지 표시
+                            Toast.makeText(requireContext(), "메모 삭제 실패", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
+                        Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+
+    //혈당 데이터 조회
+    private fun fetchBloodSugarLevel(petId: String, apiService: GraphApiService) {
+        apiService.bloodSugarGraph(petId)
+            .enqueue(object : Callback<ResponseListDTO<BloodSugarLevelDTO>> {
+                override fun onResponse(call: Call<ResponseListDTO<BloodSugarLevelDTO>>, response: Response<ResponseListDTO<BloodSugarLevelDTO>>) {
+                    val entries = ArrayList<Entry>() // 데이터 포인트 리스트 초기화
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseDTO = response.body()
+                        val status = responseDTO?.status
+                        val data = responseDTO?.data
+
+                        if (status == 200 && data != null && data.isNotEmpty()) {
+                            // recordDate를 기준으로 정렬
+                            val sortedData = data.sortedBy { it.recordDate }
+
+                            // 최근 데이터 최대 7개만 사용하여 그래프 표시
+                            sortedData.reversed().forEachIndexed { index, bloodSugarLevelDTO ->
+                                if (index < 7) {
+                                    val xValue = index.toFloat()
+                                    val yValue = bloodSugarLevelDTO.bloodSugarLevel.toFloat() // Y축 값
+                                    entries.add(Entry(xValue, yValue))
+                                }
+                            }
+
+                            // 그래프에 데이터를 표시
+                            updateLineChartWithBloodSugar(entries)
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // 데이터를 업데이트 (데이터가 없더라도 기본 틀을 그립니다)
+                    updateLineChartWithBloodSugar(entries)
+                }
+
+                override fun onFailure(call: Call<ResponseListDTO<BloodSugarLevelDTO>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    // 실패 시에도 빈 데이터로 기본 틀을 그립니다.
+                    updateLineChartWithBloodSugar(emptyList())
+                }
+            })
+    }
+
+
+    //혈당 그래프를 업데이트
+    private fun updateLineChartWithBloodSugar(entries: List<Entry>) {
+        val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
+        val dataSet = LineDataSet(entries, "혈당 수치").apply {
+            color = Color.parseColor("#FFBF00")
+            setCircleColor(Color.parseColor("#FFBF00"))
+            circleRadius = 5f
+            lineWidth = 3f
+            mode = LineDataSet.Mode.LINEAR
+        }
+
+        // 빈 데이터 처리 (데이터가 없을 경우 기본 틀을 그리기 위한 빈 데이터셋을 추가)
+        if (entries.isEmpty()) {
+            dataSet.addEntry(Entry(0f, 0f))
+        }
+
+        // x축 및 y축 범위 설정
+        lineChart.xAxis.apply {
+            axisMinimum = 0f  // x축 최소값
+            axisMaximum = 6f // x축 최대값
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f // X축 라벨 간격 설정 (1 간격으로 설정)
+            setLabelCount(7, true) // 정확히 7개의 라벨을 설정
+
+            // X축 라벨
+            valueFormatter =
+                IndexAxisValueFormatter(arrayOf("1", "2", "3", "4", "5", "6", "7"))
+        }
+
+        lineChart.axisLeft.apply {
+            axisMinimum = 40f  // y축 최소값
+            axisMaximum = 100f  // y축 최대값
+        }
+
+        // 오른쪽 y축 숨기기
+        lineChart.axisRight.isEnabled = false
+
+        // LineData 생성 및 설정
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+
+        // 그래프 갱신
+        lineChart.invalidate()
+    }
+
+
+    //몸무게 데이터 조회
+    private fun fetchWeight(petId: String, graphApiService: GraphApiService, weightApiService: WeightApiService) {
+        // 먼저 목표 몸무게를 가져오는 API 호출
+        targetWeightCheck(petId, weightApiService) { targetWeight ->
+            // 목표 몸무게를 가져온 후에 몸무게 데이터를 가져오는 API 호출
+            graphApiService.weightGraph(petId).enqueue(object : Callback<ResponseListDTO<PetWeightDTO>> {
+                override fun onResponse(call: Call<ResponseListDTO<PetWeightDTO>>, response: Response<ResponseListDTO<PetWeightDTO>>) {
+                    val entries = ArrayList<Entry>() // 데이터 포인트 리스트 초기화
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseDTO = response.body()
+                        val status = responseDTO?.status
+                        val data = responseDTO?.data
+
+                        if (status == 200 && data != null && data.isNotEmpty()) {
+                            // recordDate를 기준으로 정렬
+                            val sortedData = data.sortedBy { it.weightRecordDate }
+
+                            // 최근 데이터 최대 7개만 사용하여 그래프 표시
+                            sortedData.forEachIndexed { index, petWeightDTO ->
+                                if (index < 7) {
+                                    val xValue = index.toFloat()
+                                    val yValue = petWeightDTO.weight.toFloat() // Y축 값
+                                    entries.add(Entry(xValue, yValue))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
+                    }
+
+                    // 그래프에 데이터를 표시
+                    updateLineChartWithWeight(entries, targetWeight)
+                }
+
+                override fun onFailure(call: Call<ResponseListDTO<PetWeightDTO>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Log.d("몸무게 업데이트", "")
+                    // 데이터 값이 비어있어도 그래프는 표시
+                    updateLineChartWithWeight(emptyList(), targetWeight)
+                }
+            })
+        }
+    }
+
+
+    //몸무게 그래프 업데이트
+    private fun updateLineChartWithWeight(entries: List<Entry>, targetWeight: BigDecimal?) {
+        val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
+        val dataSet = LineDataSet(entries, "몸무게").apply {
+            color = Color.parseColor("#FFBF00")
+            setCircleColor(Color.parseColor("#FFBF00"))
+            circleRadius = 5f
+            lineWidth = 3f
+            mode = LineDataSet.Mode.LINEAR
+        }
+
+        // 빈 데이터 처리 (데이터가 없을 경우 기본 틀을 그리기 위한 빈 데이터셋을 추가)
+        if (entries.isEmpty()) {
+            dataSet.addEntry(Entry(0f, 0f))
+        }
+
+        // x축 및 y축 범위 설정
+        lineChart.xAxis.apply {
+            axisMinimum = 0f  // x축 최소값
+            axisMaximum = 6f // x축 최대값
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f // X축 라벨 간격 설정 (1 간격으로 설정)
+            setLabelCount(7, true) // 정확히 7개의 라벨을 설정
+
+            // X축 라벨
+            valueFormatter =
+                IndexAxisValueFormatter(arrayOf("1", "2", "3", "4", "5", "6", "7"))
+        }
+
+        lineChart.axisLeft.apply {
+            axisMinimum = 0f  // y축 최소값
+            axisMaximum = 30f  // y축 최대값
+
+            // 기존의 모든 LimitLine 제거
+            removeAllLimitLines()
+
+            // targetWeight가 null이 아닐 때만 LimitLine 추가
+            targetWeight?.let { weight ->
+                val limitLine = LimitLine(weight.toFloat(), "목표 몸무게").apply {
+                    lineColor = Color.parseColor("#B40404")
+                    lineWidth = 2f
+                    /*enableDashedLine(10f, 10f, 0f) // 대시 선 설정(점선)*/
+                }
+                addLimitLine(limitLine)
+            }
+        }
+
+        // 오른쪽 y축 숨기기
+        lineChart.axisRight.isEnabled = false
+
+        // LineData 생성 및 설정
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+
+        // 그래프 갱신
+        lineChart.invalidate()
+    }
+
+
+    //목표 몸무게 다이얼로그
+    private fun showTargetWeightDialog(petId: String, apiService: WeightApiService) {
+        // 다이얼로그 레이아웃을 인플레이트
+        val dialogView = layoutInflater.inflate(R.layout.target_weight_dialog, null)
+        val editTextWeight = dialogView.findViewById<EditText>(R.id.targetWeightArea)
+        val saveButton = dialogView.findViewById<Button>(R.id.saveBtn)
+
+        // 다이얼로그 생성
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        // EditText의 텍스트가 변할 때마다 감지
+        editTextWeight.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val weightText = editTextWeight.text.toString()
+                saveButton.isEnabled = try {
+                    val weight = BigDecimal(weightText)
+                    weight.signum() > 0 // 양수인지 확인
+                } catch (e: Exception) {
+                    false // 변환 불가능하면 비활성화 유지
                 }
             }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        // 저장 버튼 클릭 시 처리 로직
+        saveButton.setOnClickListener {
+            val weightText = editTextWeight.text.toString()
+            try {
+                val weight = BigDecimal(weightText)
+
+                // API 호출 및 성공 시 다이얼로그 닫기
+                targetWeightUpdate(petId, apiService, weight) {
+                    // API 성공 시 다이얼로그 닫기
+                    Toast.makeText(requireContext(), "목표 몸무게 업데이트 완료", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss() // 다이얼로그 닫기
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "유효한 몸무게를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+
+    //목표 몸무게 저장 + 수정
+    private fun targetWeightUpdate(petId: String, apiService: WeightApiService, weight: BigDecimal, onSuccess: () -> Unit) {
+
+        val targetWeightDTO = TargetWeightDTO(weight)
+
+        apiService.targetWeightUpdate(petId, targetWeightDTO).enqueue(object : Callback<ResponseDTO<Any>> {
+            override fun onResponse(call: Call<ResponseDTO<Any>>, response: Response<ResponseDTO<Any>>) {
+                // 업데이트 성공/실패 처리
+                if (response.isSuccessful) {
+                    onSuccess() // 성공 시 콜백 호출
+                } else {
+                    Toast.makeText(requireContext(), "목표 몸무게 업데이트 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
+                // 네트워크 오류 처리
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+    //목표 몸무게 조회
+    private fun targetWeightCheck(petId: String, apiService: WeightApiService, callback: (BigDecimal?) -> Unit) {
+        apiService.targetWeightCheck(petId).enqueue(object : Callback<ResponseDTO<BigDecimal>> {
+            override fun onResponse(call: Call<ResponseDTO<BigDecimal>>, response: Response<ResponseDTO<BigDecimal>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseDTO = response.body()
+                    val status = responseDTO?.status
+                    val data = responseDTO?.data
+
+                    if (status == 200 && data != null) {
+                        // 목표 몸무게를 callback으로 전달
+                        callback(data)
+                    } else {
+                        // 실패 시 null 전달
+                        callback(null)
+                    }
+                } else {
+                    // 실패 시 null 전달
+                    callback(null)
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<BigDecimal>>, t: Throwable) {
+                // 네트워크 오류 및 예외 정보를 로그에 출력
+                Log.e("목표 몸무게 조회", "네트워크 오류: ${t.message}", t)
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                // 실패 시 null 전달
+                callback(null)
+            }
+        })
+    }
+
+
+    //목표 몸무게 삭제
+    private fun targetWeightDelete(petId: String, apiService: WeightApiService) {
+        apiService.targetWeightDelete(petId).enqueue(object : Callback<ResponseDTO<Any>> {
+                override fun onResponse(call: Call<ResponseDTO<Any>>, response: Response<ResponseDTO<Any>>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseDTO = response.body()
+
+                        if (responseDTO?.status == 200) {
+                            // 요청 성공 시 토스트 메시지 표시
+                            Toast.makeText(requireContext(), "메모 삭제 성공", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // 실패 시 토스트 메시지 표시
+                        Toast.makeText(requireContext(), "메모 삭제 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+
+    //현재 몸무게 조회
+    private fun currentWeightCheck(petId: String, apiService: WeightApiService, callback: (BigDecimal?) -> Unit) {
+        apiService.currentWeightCheck(petId).enqueue(object : Callback<ResponseDTO<BigDecimal>> {
+                override fun onResponse(call: Call<ResponseDTO<BigDecimal>>, response: Response<ResponseDTO<BigDecimal>>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseDTO = response.body()
+                        val status = responseDTO?.status
+                        val data = responseDTO?.data
+
+                        if (status == 200 && data != null) {
+                            callback(data)
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseDTO<BigDecimal>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                    // 실패 시에도 빈 데이터로 기본 틀을 그립니다.
+                }
+            })
+    }
+
+
+    //하루 적정 칼로리 조회
+    private fun recommendedCaloriesCheck(petId: String, apiService: WeightApiService) {
+        apiService.recommendedCaloriesCheck(petId).enqueue(object : Callback<ResponseDTO<RecommendedKcalCheckDTO>> {
+            override fun onResponse(call: Call<ResponseDTO<RecommendedKcalCheckDTO>>, response: Response<ResponseDTO<RecommendedKcalCheckDTO>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseDTO = response.body()
+                    val status = responseDTO?.status
+                    val message = responseDTO?.message
+                    val data = responseDTO?.data
+
+                    if (status == 200) {
+                        val calRecommendedCaloriesDate = data?.calRecommendedCaloriesDate
+                        val recommendedCalories = data?.recommendedCalories
+
+                        if (calRecommendedCaloriesDate == null && recommendedCalories == null) {
+                            // 둘 다 null인 경우 TextView를 보이게 함
+                            obesityCheck.visibility = View.VISIBLE
+                            recommendCaloriesLayout.visibility = View.GONE
+                            recommendDateLayout.visibility = View.GONE
+                        } else {
+                            // 둘 다 null이 아닌 경우 TextView를 안 보이게 함
+                            obesityCheck.visibility = View.GONE
+                            recommendCaloriesLayout.visibility = View.VISIBLE
+                            recommendDateLayout.visibility = View.VISIBLE
+
+                            recommendedKcal.text = recommendedCalories.toString()
+                            recommendedDate.text = calRecommendedCaloriesDate
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "서버 에러: ", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<RecommendedKcalCheckDTO>>, t: Throwable) {
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }

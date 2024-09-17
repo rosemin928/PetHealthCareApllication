@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Register4Activity">
+    tools:context=".register.Register4Activity">
 
     <ImageView
         android:layout_width="250dp"
@@ -94,7 +94,7 @@
         android:layout_height="30dp"
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
-        android:text="포메라니안"
+        android:text="포메"
         android:textColor="@color/white"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -142,7 +142,7 @@
         android:layout_height="30dp"
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
-        android:text="비숑프리제"
+        android:text="비숑"
         android:textColor="@color/white"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"

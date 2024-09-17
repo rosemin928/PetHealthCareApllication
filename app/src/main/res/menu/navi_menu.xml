@@ -7,6 +7,11 @@
         android:icon="@drawable/navi_home"/>
 
     <item
+        android:id="@+id/recommendFragment"
+        android:title="사료추천"
+        android:icon="@drawable/navi_recommend"/>
+
+    <item
         android:id="@+id/analysisFragment"
         android:title="당뇨위험분석"
         android:icon="@drawable/navi_analysis"/>
