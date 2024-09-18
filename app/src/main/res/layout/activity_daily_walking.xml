@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DailyWalkingActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="날짜별 산책 기록"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.039" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="72dp"
+        android:background="#A4A4A4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.138">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="선택 날짜: "
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+        <TextView
+            android:id="@+id/selectedDateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="선택 날짜"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.238">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="목표 산책 시간: "
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+        <TextView
+            android:id="@+id/targetWalkingTimeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="목표 산책 시간"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.338">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="산책 강도: "
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+        <TextView
+            android:id="@+id/strong"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="강"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="10dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:background="@drawable/calendar_today"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="10dp"/>
+
+        <TextView
+            android:id="@+id/medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="중"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="10dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="10dp"/>
+
+        <TextView
+            android:id="@+id/weak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="하"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:layout_marginStart="10dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.438">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="산책 시간: "
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+        <TextView
+            android:id="@+id/walkingTimeText"
+            android:layout_width="180dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/custom_textview2"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:padding="2dp"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"/>
+
+        <ImageView
+            android:id="@+id/walkingTimeSelect"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/clock_icon"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"/>
+
+    </LinearLayout>
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/saveBtn"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:background="@drawable/button_color_change"
+        android:enabled="false"
+        android:gravity="center"
+        android:text="등록하기"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.888" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/deleteBtn"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:background="@drawable/button_draw3"
+        android:gravity="center"
+        android:text="삭제하기"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.976" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

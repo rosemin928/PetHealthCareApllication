@@ -45,12 +45,16 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import android.text.Editable
 import android.text.TextWatcher
+import com.example.pethealthapplication.dto.DailyWalkingRecordCheckDTO
 import com.example.pethealthapplication.dto.RecommendedKcalCheckDTO
 import com.example.pethealthapplication.obesitycheck.ObesityCheck0Activity
 import com.example.pethealthapplication.weightapi.WeightApiClient
 import com.github.mikephil.charting.components.LimitLine
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import java.text.SimpleDateFormat
+import java.time.DateTimeException
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -65,6 +69,8 @@ class HomeFragment : Fragment() {
     private lateinit var recommendDateLayout: LinearLayout
     private lateinit var recommendedKcal: TextView
     private lateinit var recommendedDate: TextView
+
+    private lateinit var calendarView: MaterialCalendarView
 
     private var memoDate: LocalDate? = null
 
@@ -359,28 +365,69 @@ class HomeFragment : Fragment() {
 
         // 8. 날짜별 산책 기록
         // (1) 캘린더 커스텀
-        val calendarView = view.findViewById<MaterialCalendarView>(R.id.calendarView)
+        val dailyReportApiService = DailyReportApiClient.getApiService(requireContext())
+        calendarView = view.findViewById(R.id.calendarView)
 
         // 초기 설정
         calendarView.addDecorator(CalendarDecorators.getTodayDecorator(requireContext()))
         calendarView.addDecorator(CalendarDecorators.getSelectedMonthDecorator(CalendarDay.today().month, requireContext()))
 
+        // 처음 달이 표시될 때 기록을 가져와 파란 점 표시
+        fetchWalkingRecordsAndApplyDots(petId ?: "", calendarView, dailyReportApiService, requireContext())
+
+
         // 달이 변경될 때마다 데코레이터 업데이트
         calendarView.setOnMonthChangedListener { _, newMonth ->
             calendarView.removeDecorators() // 기존 데코레이터 제거
+
             calendarView.addDecorator(CalendarDecorators.getTodayDecorator(requireContext()))
             calendarView.addDecorator(CalendarDecorators.getSelectedMonthDecorator(newMonth.month, requireContext()))
         }
 
-        // (2) 목표 산책 시간 & 시각 설정
+
+        // (2) 날짜별 기록
+        calendarView.setOnDateChangedListener { widget, date, selected ->
+            // 선택된 날짜 가져오기
+            val selectedDate = date.date
+
+            if (petId != null)
+                checkTargetWalkingTimeAndNavigate(petId, dailyReportApiService, selectedDate.toString())
+        }
+
+        // (3) 목표 산책 시간 & 시각 조회
+        if (petId != null)
+            targetWalkingScheduleTimeCheck(petId, dailyReportApiService) { walkingTime, scheduleTime ->
+                val walkingScheduleText = view?.findViewById<TextView>(R.id.walkingScheduleText)
+                val targetWalkingTimeText = view?.findViewById<TextView>(R.id.targetWalkingTimeText)
+
+                // 목표 산책 시간 텍스트뷰 설정
+                if (walkingTime != null) {
+                    targetWalkingTimeText?.text = walkingTime
+                } else {
+                    targetWalkingTimeText?.text = "목표 산책 시간"
+                }
+
+                // 산책 시각 텍스트뷰 설정
+                if (scheduleTime != null) {
+                    walkingScheduleText?.text = "매일 $scheduleTime"
+                } else {
+                    walkingScheduleText?.text = "산책 시각"
+                }
+            }
+
+        // (4) 목표 산책 시간 & 시각 설정
         val targetTimeEditButton = view.findViewById<ImageView>(R.id.targetTimeEditBtn)
         targetTimeEditButton.setOnClickListener {
             val intent = Intent(requireContext(), TargetWalkingTimeActivity::class.java)
             startActivity(intent)
         }
 
-        // (3) 목표 산책 시간 & 시각 삭제
+        // (5) 목표 산책 시간 & 시각 삭제
         val targetTimeDeleteButton = view.findViewById<ImageView>(R.id.targetTimeDeleteBtn)
+        targetTimeDeleteButton.setOnClickListener {
+            if (petId != null)
+                targetWalkingScheduleTimeDelete(petId,dailyReportApiService)
+        }
 
 
 
@@ -900,7 +947,6 @@ class HomeFragment : Fragment() {
 
                 override fun onFailure(call: Call<ResponseDTO<BigDecimal>>, t: Throwable) {
                     Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
-                    // 실패 시에도 빈 데이터로 기본 틀을 그립니다.
                 }
             })
     }
@@ -947,4 +993,228 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
+
+    //목표 산책 시간 & 시각 삭제
+    private fun targetWalkingScheduleTimeDelete(petId: String, apiService: DailyReportApiService) {
+        // 첫 번째 API 호출 (목표 산책 시간 업데이트)
+        apiService.targetWalkingTimeDelete(petId).enqueue(object : Callback<ResponseDTO<Any>> {
+            override fun onResponse(call: Call<ResponseDTO<Any>>, response: Response<ResponseDTO<Any>>) {
+                if (response.isSuccessful) {
+                    // 첫 번째 요청이 성공하면 두 번째 API 호출 (목표 산책 시각 업데이트)
+                    apiService.walkingScheduleDelete(petId).enqueue(object :
+                        Callback<ResponseDTO<Any>> {
+                        override fun onResponse(call: Call<ResponseDTO<Any>>, response: Response<ResponseDTO<Any>>) {
+                            if (response.isSuccessful) {
+                                // 두 번째 요청이 성공하면 성공 메시지 표시
+                                Toast.makeText(requireContext(), "삭제 성공", Toast.LENGTH_SHORT).show()
+                            } else {
+                                // 두 번째 요청이 실패하면 실패 메시지 표시
+                                Toast.makeText(requireContext(), "삭제 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
+                            // 두 번째 요청이 네트워크 오류일 경우 처리
+                            Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                } else {
+                    // 첫 번째 요청이 실패하면 실패 메시지 표시
+                    Toast.makeText(requireContext(), "삭제 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
+                // 첫 번째 요청이 네트워크 오류일 경우 처리
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+    //목표 산책 시간 & 시각 조회
+    private fun targetWalkingScheduleTimeCheck(
+        petId: String,
+        apiService: DailyReportApiService,
+        callback: (String?, String?) -> Unit
+    ) {
+        // 첫 번째 API 호출 (목표 산책 시간 확인)
+        apiService.targetWalkingTimeCheck(petId).enqueue(object : Callback<ResponseDTO<Short>> {
+            override fun onResponse(call: Call<ResponseDTO<Short>>, response: Response<ResponseDTO<Short>>) {
+                if (response.isSuccessful) {
+                    val targetWalkingTime = response.body()?.data
+                    if (targetWalkingTime != null) {
+                        // 분을 시간과 분으로 변환
+                        val hours = targetWalkingTime / 60
+                        val minutes = targetWalkingTime % 60
+                        val formattedWalkingTime = "${hours}시간 ${minutes}분"
+
+                        // 두 번째 API 호출 (목표 산책 시각 확인)
+                        apiService.walkingScheduleCheck(petId).enqueue(object : Callback<ResponseDTO<String>> {
+                            override fun onResponse(call: Call<ResponseDTO<String>>, response: Response<ResponseDTO<String>>) {
+                                if (response.isSuccessful) {
+                                    val walkingSchedule = response.body()?.data
+                                    if (walkingSchedule != null) {
+                                        // 시간 문자열 포맷 변환
+                                        val inputFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                                        val outputFormat = SimpleDateFormat("HH시 mm분", Locale.getDefault())
+                                        val date = inputFormat.parse(walkingSchedule)
+                                        val formattedScheduleTime = date?.let { outputFormat.format(it) } ?: "시간 없음"
+
+                                        // 두 API 호출 결과를 콜백으로 전달
+                                        callback(formattedWalkingTime, formattedScheduleTime)
+                                    } else {
+                                        callback(formattedWalkingTime, null)  // 산책 시각 없음
+                                    }
+                                } else {
+                                    callback(formattedWalkingTime, null)  // 두 번째 API 실패
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResponseDTO<String>>, t: Throwable) {
+                                callback(formattedWalkingTime, null)  // 네트워크 오류
+                            }
+                        })
+                    } else {
+                        callback(null, null)  // 첫 번째 API 성공하지만 데이터 없음
+                    }
+                } else {
+                    callback(null, null)  // 첫 번째 API 실패
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<Short>>, t: Throwable) {
+                callback(null, null)  // 네트워크 오류
+            }
+        })
+    }
+
+
+    //목표 산책 시간만 조회 + null일 경우 날짜별 기록 넘어가지 않음
+    private fun checkTargetWalkingTimeAndNavigate(petId: String, apiService: DailyReportApiService, selectedDate: String) {
+        apiService.targetWalkingTimeCheck(petId).enqueue(object : Callback<ResponseDTO<Short>> {
+            override fun onResponse(call: Call<ResponseDTO<Short>>, response: Response<ResponseDTO<Short>>) {
+                if (response.isSuccessful) {
+                    val targetWalkingTime = response.body()?.data
+                    if (targetWalkingTime != null) {
+
+                        dailyWalkingRecordCheck2(petId, selectedDate, apiService) {targetWalkingTimeResult ->
+                            if (targetWalkingTimeResult == null) {
+                                // 목표 산책 시간이 있고 새로 작성
+                                val intent = Intent(requireContext(), DailyWalkingActivity::class.java)
+                                intent.putExtra("SELECTED_DATE", selectedDate)
+                                intent.putExtra("ACTION", "POST")
+                                startActivity(intent)
+                            } else {
+                                val intent = Intent(requireContext(), DailyWalkingActivity::class.java)
+                                intent.putExtra("SELECTED_DATE", selectedDate)
+                                intent.putExtra("ACTION", "UPDATE")
+                                startActivity(intent)
+                            }
+                        }
+                    } else {
+                        // 목표 산책 시간이 null이면 메시지 표시
+                        Toast.makeText(requireContext(), "목표 산책 시간을 먼저 설정해주세요.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "목표 산책 시간 조회 실패", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<Short>>, t: Throwable) {
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+
+    //날짜별 산책 기록 조회 + 해당 날짜에 파란점 찍기
+    fun applyBlueDotDecorator(datesWithRecords: Set<CalendarDay>, context: Context, calendarView: MaterialCalendarView) {
+        val decorator = CalendarDecorators.BlueDotDecorator(datesWithRecords, context)
+        calendarView.addDecorator(decorator)  // BlueDotDecorator를 MaterialCalendarView에 추가
+    }
+
+    fun getVisibleMonthDays(calendarView: MaterialCalendarView): List<CalendarDay> {
+        val currentMonth = calendarView.currentDate.month  // 현재 달의 월 가져오기
+        val currentYear = calendarView.currentDate.year    // 현재 달의 년 가져오기
+        val firstDayOfMonth = LocalDate.of(currentYear, currentMonth, 1)
+        val lastDayOfMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.lengthOfMonth()) // 해당 달의 마지막 날 계산
+
+        val visibleDays = mutableListOf<CalendarDay>()
+        var currentDate = firstDayOfMonth
+        while (!currentDate.isAfter(lastDayOfMonth)) {
+            visibleDays.add(CalendarDay.from(currentDate.year, currentDate.monthValue, currentDate.dayOfMonth))
+            currentDate = currentDate.plusDays(1)
+        }
+        return visibleDays
+    }
+
+    fun fetchWalkingRecordsAndApplyDots(petId: String, calendarView: MaterialCalendarView, apiService: DailyReportApiService, context: Context) {
+        val visibleDays = getVisibleMonthDays(calendarView)
+        val datesWithRecords = mutableSetOf<CalendarDay>()
+
+        visibleDays.forEach { day ->
+            val recordDate = "${day.year}-${String.format("%02d", day.month)}-${String.format("%02d", day.day)}" // recordDate 형식 변환
+            dailyWalkingRecordCheck(petId, recordDate, apiService) { result ->
+                if (result) {  // targetWalkingResult가 true인 경우에만 파란 점 추가
+                    datesWithRecords.add(day)
+                }
+
+                // 모든 날짜에 대한 처리가 완료되면 데코레이터 적용
+                if (day == visibleDays.last()) {
+                    applyBlueDotDecorator(datesWithRecords, context, calendarView)
+                }
+            }
+        }
+    }
+
+
+    // dailyWalkingRecordCheck 수정하여 결과를 콜백으로 받음
+    fun dailyWalkingRecordCheck(petId: String, recordDate: String, apiService: DailyReportApiService, onResult: (Boolean) -> Unit) {
+        apiService.dailyWalkingRecordCheck(petId, recordDate).enqueue(object : Callback<ResponseDTO<DailyWalkingRecordCheckDTO>> {
+            override fun onResponse(call: Call<ResponseDTO<DailyWalkingRecordCheckDTO>>, response: Response<ResponseDTO<DailyWalkingRecordCheckDTO>>) {
+                if (response.isSuccessful) {
+                    val data = response.body()?.data
+                    onResult(data?.targetWalkingResult == true)  // true일 때만 파란 점을 찍기 위한 결과 반환
+                } else {
+                    onResult(false)
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<DailyWalkingRecordCheckDTO>>, t: Throwable) {
+                onResult(false)
+            }
+        })
+    }
+
+
+    // 날짜별 산책 기록 조회
+    private fun dailyWalkingRecordCheck2(petId: String, recordDate: String, apiService: DailyReportApiService, callback: (Boolean?) -> Unit) {
+        apiService.dailyWalkingRecordCheck(petId, recordDate).enqueue(object : Callback<ResponseDTO<DailyWalkingRecordCheckDTO>> {
+            override fun onResponse(call: Call<ResponseDTO<DailyWalkingRecordCheckDTO>>, response: Response<ResponseDTO<DailyWalkingRecordCheckDTO>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseDTO = response.body()
+                    val status = responseDTO?.status
+                    val message = responseDTO?.message
+                    val data = responseDTO?.data
+
+                    val targetWalkingResult = data?.targetWalkingResult
+
+                    if (status == 200) {
+                        callback(targetWalkingResult)
+                    } else {
+                        callback(null)
+                    }
+                } else {
+                    callback(null)
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<DailyWalkingRecordCheckDTO>>, t: Throwable) {
+                callback(null)
+            }
+        })
+    }
+
 }

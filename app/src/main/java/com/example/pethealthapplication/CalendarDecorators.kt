@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.spans.DotSpan
 
 object CalendarDecorators {
 
@@ -34,6 +35,20 @@ object CalendarDecorators {
         }
     }
 
+    // 기록이 있는 날짜에 파란 점을 표시하는 클래스
+    class BlueDotDecorator(private val dates: Set<CalendarDay>, private val context: Context) : DayViewDecorator {
+        private val dotSpan = DotSpan(10f, ContextCompat.getColor(context, R.color.blue)) // 파란 점 설정
+
+        override fun shouldDecorate(day: CalendarDay): Boolean {
+            return dates.contains(day)
+        }
+
+        override fun decorate(view: DayViewFacade) {
+            view.addSpan(dotSpan)
+        }
+    }
+
+
 
 
 
@@ -44,5 +59,9 @@ object CalendarDecorators {
 
     fun getSelectedMonthDecorator(selectedMonth: Int, context: Context): DayViewDecorator {
         return SelectedMonthDecorator(selectedMonth, context)
+    }
+
+    fun getBlueDotDecorator(dates: Set<CalendarDay>, context: Context): DayViewDecorator {
+        return BlueDotDecorator(dates, context)
     }
 }
