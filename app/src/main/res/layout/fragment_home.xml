@@ -14,17 +14,25 @@
         android:fillViewport="true"
         android:scrollbars="none">
 
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/notification_icon"
+                android:layout_marginTop="30dp"
+                android:layout_marginStart="350dp"/>
 
             <HorizontalScrollView
                 android:id="@+id/horizontalScrollView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="37dp"
-                android:layout_marginTop="80dp"
+                android:layout_marginTop="30dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -54,16 +62,28 @@
                             android:scaleType="centerCrop"
                             android:src="@drawable/dog_profile_icon" />
 
-                        <TextView
-                            android:id="@+id/petName"
+                        <LinearLayout
+                            android:id="@+id/petNameArea"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="100dp"
-                            android:layout_marginTop="15dp"
-                            android:text="이름"
-                            android:textColor="@color/black"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:layout_marginTop="15dp">
+                            <TextView
+                                android:id="@+id/petName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="이름"
+                                android:textColor="@color/black"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_marginStart="5dp"
+                                android:layout_marginTop="8dp"
+                                android:src="@drawable/down_arrow" />
+                        </LinearLayout>
+
 
                         <TextView
                             android:id="@+id/petAge"
@@ -100,28 +120,46 @@
                             android:layout_height="20dp"
                             android:layout_marginStart="310dp"
                             android:layout_marginTop="50dp"
+                            android:layout_marginEnd="10dp"
                             android:src="@drawable/edit_icon" />
 
                     </RelativeLayout>
 
-                    <TextView
-                        android:id="@+id/myPet2"
+                    <RelativeLayout
+                        android:id="@+id/newPetAddArea"
                         android:layout_width="340dp"
                         android:layout_height="80dp"
-                        android:layout_marginEnd="55dp"
-                        android:background="@drawable/custom_textview"
+                        android:layout_marginEnd="40dp"
                         android:layout_gravity="center_vertical"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:padding="2dp"
-                        android:text="새로 등록"
-                        android:textColor="@android:color/black"
-                        android:textSize="18sp" />
+                        android:elevation="8dp"
+                        android:background="@drawable/custom_textview">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="132dp"
+                            android:layout_marginTop="15dp"
+                            android:includeFontPadding="false"
+                            android:padding="2dp"
+                            android:text="새로 등록"
+                            android:textColor="@android:color/black"
+                            android:textSize="18sp" />
+
+                        <ImageView
+                            android:id="@+id/newPetAddBtn"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/add_icon"
+                            android:layout_marginTop="50dp"
+                            android:layout_marginStart="160dp"/>
+
+                    </RelativeLayout>
 
                 </LinearLayout>
             </HorizontalScrollView>
 
             <RelativeLayout
+                android:id="@+id/obesityCheckArea"
                 android:layout_width="340dp"
                 android:layout_height="80dp"
                 android:layout_gravity="center"
@@ -130,11 +168,35 @@
                 android:background="@drawable/custom_textview"
                 android:elevation="8dp">
 
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:layout_marginStart="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="비만도 체크"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/right_icon"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginStart="220dp"/>
+
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/obesityCheck"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="40dp"
                     android:text="반려동물의 비만도를 체크해보세요!"
                     android:textColor="@color/black"
                     android:textSize="15sp" />
@@ -258,24 +320,30 @@
                 android:background="@drawable/custom_textview"
                 android:elevation="8dp">
 
-                <TextView
-                    android:id="@+id/targetWeightText"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="목표 몸무게 설정하기"
-                    android:textSize="18sp"
-                    android:textColor="@color/black"
-                    android:textStyle="bold"
-                    android:gravity="center_horizontal"
-                    android:layout_marginTop="15dp"/>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginStart="65dp"
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/targetWeightAddBtn"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/add_icon"
-                    android:layout_marginTop="50dp"
-                    android:layout_marginStart="160dp"/>
+                    <ImageView
+                        android:id="@+id/targetWeightAddBtn"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/add_circle_icon"/>
+
+                    <TextView
+                        android:id="@+id/targetWeightText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="  목표 몸무게 설정하기"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -388,7 +456,8 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="50dp"
                     android:text="처방전 :"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textColor="@color/black"/>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -423,7 +492,8 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="75dp"
                     android:text="몸무게 :"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textColor="@color/black"/>
 
                 <TextView
                     android:id="@+id/petKgText"
@@ -440,7 +510,8 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="100dp"
                     android:text="혈당 :"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textColor="@color/black"/>
 
                 <TextView
                     android:id="@+id/bloodSugarText"
@@ -457,7 +528,8 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="125dp"
                     android:text="특이사항 :"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textColor="@color/black"/>
 
                 <TextView
                     android:id="@+id/specialMemoText"

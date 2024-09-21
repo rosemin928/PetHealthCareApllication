@@ -31,6 +31,17 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
 
+    <View
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="71.3dp"
+        android:layout_marginBottom="246dp"
+        android:background="#1A951B"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.8"
+        tools:ignore="MissingConstraints" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -61,7 +72,7 @@
             android:background="@drawable/button_color_drawable"
             android:gravity="center"
             android:text="네"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_gray"
             android:textSize="16dp"
             android:layout_marginEnd="30dp"/>
 
@@ -72,7 +83,7 @@
             android:background="@drawable/button_color_drawable"
             android:gravity="center"
             android:text="아니오"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_gray"
             android:textSize="16dp" />
 
     </LinearLayout>

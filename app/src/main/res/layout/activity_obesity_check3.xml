@@ -23,7 +23,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="2dp"
         android:layout_marginTop="72dp"
         android:layout_marginBottom="246dp"
         android:background="#A4A4A4"
@@ -31,6 +31,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="71.3dp"
+        android:layout_marginBottom="246dp"
+        android:background="#1A951B"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.2"
+        tools:ignore="MissingConstraints" />
+
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -64,7 +76,8 @@
             android:layout_height="wrap_content"
             android:text="낮은/높은"
             android:textSize="16sp"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black"
+            android:textStyle="bold"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -109,8 +122,8 @@
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
         android:text="네"
-        android:textColor="@color/white"
-        android:textSize="16dp"
+        android:textColor="@color/dark_gray"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.164"
@@ -125,8 +138,8 @@
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
         android:text="아니오"
-        android:textColor="@color/white"
-        android:textSize="16dp"
+        android:textColor="@color/dark_gray"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.785"
@@ -141,7 +154,7 @@
         android:text="다음으로"
         android:gravity="center"
         android:textColor="#ffffff"
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:background="@drawable/button_draw"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

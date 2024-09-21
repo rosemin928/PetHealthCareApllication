@@ -57,8 +57,8 @@ class ObesityCheck7Activity : AppCompatActivity() {
         }
 
         //홈으로 돌아가기
-        val homeButton = findViewById<Button>(R.id.homeBtn)
-        homeButton.setOnClickListener {
+        val closeButton = findViewById<Button>(R.id.closeButton)
+        closeButton.setOnClickListener {
             // 홈으로 이동
             val intent = Intent(this@ObesityCheck7Activity, MainActivity::class.java)
             startActivity(intent)

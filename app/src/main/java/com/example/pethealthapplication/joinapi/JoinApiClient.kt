@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object JoinApiClient {
-    private const val BASE_URL = "http://10.0.2.2:8080" // 서버의 URL로 변경
+    private const val BASE_URL = "http://ec2-13-124-65-7.ap-northeast-2.compute.amazonaws.com:8080/" // 서버의 URL로 변경
 
     private var retrofit: Retrofit? = null
 

@@ -168,19 +168,40 @@ class Register7Activity : AppCompatActivity() {
 
     // 알람 설정
     private fun scheduleInsulinNotification() {
-        val insulinTime = insulinTime1 ?: return
+        // 알람 매니저 초기화
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        // insulinTime1에 대해 알람 설정
+        scheduleNotificationForTime(alarmManager, insulinTime1, 1)
+
+        // insulinTime2에 대해 알람 설정
+        scheduleNotificationForTime(alarmManager, insulinTime2, 2)
+
+        // insulinTime3에 대해 알람 설정
+        scheduleNotificationForTime(alarmManager, insulinTime3, 3)
+    }
+
+    // 개별 인슐린 시간에 대한 알림 설정
+    private fun scheduleNotificationForTime(alarmManager: AlarmManager, insulinTime: LocalTime?, requestCode: Int) {
+        // null 체크 (null이면 알림 설정 X)
+        insulinTime ?: return
+
+        // 알림을 받을 PendingIntent 생성
         val intent = Intent(this, InsulinAlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // 현재 시간 가져오기
         val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+        // 알람 시간 설정
         var alarmTime = insulinTime.atDate(now.toLocalDate()).atZone(ZoneId.systemDefault())
         if (alarmTime.isBefore(now)) {
-            alarmTime = alarmTime.plusDays(1)
+            alarmTime = alarmTime.plusDays(1) // 이미 시간이 지났다면 다음날로 설정
         }
 
+        // 알람 설정
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             alarmTime.toEpochSecond() * 1000,

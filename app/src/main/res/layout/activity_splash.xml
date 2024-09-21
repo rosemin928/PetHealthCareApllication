@@ -4,11 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".`0_SplashActivity`">
+    tools:context=".SplashActivity">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/hospital2" />
+        android:layout_marginHorizontal="30dp"
+        android:src="@drawable/hospital" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

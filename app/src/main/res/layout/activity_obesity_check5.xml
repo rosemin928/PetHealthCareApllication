@@ -22,7 +22,6 @@
         app:layout_constraintVertical_bias="0.039" />
 
     <View
-        android:id="@+id/view4"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="72dp"
@@ -30,6 +29,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="71.3dp"
+        android:layout_marginBottom="246dp"
+        android:background="#1A951B"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.6"
         tools:ignore="MissingConstraints" />
 
     <TextView
@@ -66,7 +76,7 @@
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
         android:text="1"
-        android:textColor="@color/white"
+        android:textColor="@color/dark_gray"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -82,7 +92,7 @@
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
         android:text="2"
-        android:textColor="@color/white"
+        android:textColor="@color/dark_gray"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -98,7 +108,7 @@
         android:background="@drawable/button_color_drawable"
         android:gravity="center"
         android:text="3"
-        android:textColor="@color/white"
+        android:textColor="@color/dark_gray"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

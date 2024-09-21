@@ -49,6 +49,21 @@ object CalendarDecorators {
     }
 
 
+    // 선택된 날짜의 배경색 지정
+    class SelectedDayDecorator(private val selectedDate: CalendarDay, private val context: Context) : DayViewDecorator {
+
+        override fun shouldDecorate(day: CalendarDay?): Boolean {
+            return day == selectedDate
+        }
+
+        override fun decorate(view: DayViewFacade?) {
+            // 선택된 날짜의 배경을 원하는 drawable로 설정
+            view?.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.calendar_today)!!)
+        }
+    }
+
+
+
 
 
 

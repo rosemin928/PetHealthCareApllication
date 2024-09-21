@@ -115,6 +115,7 @@ class JoinIdActivity : AppCompatActivity() {
 
                     override fun onFailure(call: Call<ResponseDTO<Any>>, t: Throwable) {
                         Toast.makeText(this@JoinIdActivity, "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Log.d("JOIN", "${t.message}")
                     }
                 })
             } else {

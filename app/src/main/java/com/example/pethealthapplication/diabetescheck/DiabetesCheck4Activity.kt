@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import com.example.pethealthapplication.MainActivity
@@ -99,6 +100,17 @@ class DiabetesCheck4Activity : AppCompatActivity() {
 
                     // 데이터 처리
                     if (status == 200) {
+                        // recommendedNote를 가져와 SharedPreferences에 저장
+                        val recommendedNote = data?.recommendedNote
+                        if (recommendedNote != null) {
+                            val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+                            val editor = sharedPreferences.edit()
+                            editor.putString("RECOMMENDED_NOTE_KEY", recommendedNote)
+                            editor.apply() // 비동기 저장
+
+                            Log.d("DiabetesActivity", "$recommendedNote")
+                        }
+
                         // MainActivity로 이동
                         val intent = Intent(this@DiabetesCheck4Activity, MainActivity::class.java)
                         // analysis2Fragment를 표시할 수 있도록 데이터를 전달

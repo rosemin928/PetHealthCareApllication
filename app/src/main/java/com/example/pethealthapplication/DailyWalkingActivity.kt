@@ -424,11 +424,10 @@ class DailyWalkingActivity : AppCompatActivity() {
                             }
                         }
                     } else {
-                        Toast.makeText(this@DailyWalkingActivity, "삭제 실패: $message", Toast.LENGTH_SHORT).show()
+                        //아무것도 하지 않음
                     }
                 } else {
-                    val errorMessage = response.errorBody()?.string() ?: "알 수 없는 에러"
-                    Toast.makeText(this@DailyWalkingActivity, "응답 실패 $errorMessage", Toast.LENGTH_SHORT).show()
+                    //아무것도 하지 않음
                 }
             }
 

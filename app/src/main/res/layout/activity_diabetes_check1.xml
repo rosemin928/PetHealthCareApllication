@@ -31,6 +31,17 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
 
+    <View
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="71.3dp"
+        android:layout_marginBottom="246dp"
+        android:background="#1A951B"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.32"
+        tools:ignore="MissingConstraints" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -82,7 +93,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="입니다"
+            android:text="ml입니다"
             android:textColor="@color/dark_gray"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -107,7 +118,7 @@
             android:background="@drawable/button_color_drawable"
             android:gravity="center"
             android:text="이상"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_gray"
             android:textSize="18sp" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -118,7 +129,7 @@
             android:background="@drawable/button_color_drawable"
             android:gravity="center"
             android:text="동일"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_gray"
             android:textSize="18sp" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -128,7 +139,7 @@
             android:background="@drawable/button_color_drawable"
             android:gravity="center"
             android:text="이하"
-            android:textColor="@color/white"
+            android:textColor="@color/dark_gray"
             android:textSize="18sp" />
 
     </LinearLayout>

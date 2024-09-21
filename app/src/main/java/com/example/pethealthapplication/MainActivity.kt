@@ -26,21 +26,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        // Intent로부터 값을 받아옴
-        val directToAnalysis2 = intent.getBooleanExtra("SHOW_ANALYSIS2_FRAGMENT", false)
+        // 네비게이션 설정
+        setBottomNavigationView()
 
-        if (directToAnalysis2) {
-            // 바로 analysis2Fragment를 보여줌
+        // Intent에서 플래그 확인
+        val showAnalysis2Fragment = intent.getBooleanExtra("SHOW_ANALYSIS2_FRAGMENT", false)
+        if (showAnalysis2Fragment) {
+            // Analysis2Fragment를 표시
             supportFragmentManager.beginTransaction()
                 .replace(R.id.main_container, Analysis2Fragment())
                 .commit()
-        } else {
-            // BottomNavigationView 설정 및 다른 로직을 실행
-            setBottomNavigationView()
-        }
 
-        if (savedInstanceState == null) {
-            binding.bottomNavigationView.selectedItemId = R.id.homeFragment
+            // BottomNavigationView의 선택 상태를 analysisFragment로 변경
+            binding.bottomNavigationView.selectedItemId = R.id.analysisFragment
+        } else {
+            // 기본 화면(HomeFragment)을 표시
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.main_container, HomeFragment())
+                .commit()
         }
     }
 
@@ -68,36 +71,34 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.homeFragment -> {
-                    supportFragmentManager.beginTransaction().replace(R.id.main_container,
-                        HomeFragment()
-                    ).commit()
+                    supportFragmentManager.beginTransaction().replace(R.id.main_container, HomeFragment()).commit()
                     true
                 }
                 R.id.recommendFragment -> {
-                    supportFragmentManager.beginTransaction().replace(R.id.main_container,
-                        RecommendFragment()).commit()
+                    supportFragmentManager.beginTransaction().replace(R.id.main_container, RecommendFragment()).commit()
                     true
                 }
                 R.id.analysisFragment -> {
-                    // 조회 API 호출
+                    // 조회 API 호출 후 데이터에 따라 프래그먼트 이동
                     checkDiabetesData(petId ?: "", diabetesApiService) { showAnalysisFragment ->
                         if (showAnalysisFragment) {
                             // 하나라도 null이면 analysis1Fragment로 이동
-                            supportFragmentManager.beginTransaction().replace(R.id.main_container,
-                                Analysis1Fragment()
-                            ).commit()
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.main_container, Analysis1Fragment())
+                                .addToBackStack(null) // 백스택에 추가하지 않음으로써 이전 프래그먼트로 돌아가지 않도록 처리
+                                .commit()
                         } else {
                             // 둘 다 null이 아니면 analysis2Fragment로 이동
-                            supportFragmentManager.beginTransaction().replace(R.id.main_container,
-                                Analysis2Fragment()
-                            ).commit()
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.main_container, Analysis2Fragment())
+                                .addToBackStack(null) // 백스택에 추가하지 않음
+                                .commit()
                         }
                     }
                     true
                 }
                 R.id.myPageFragment -> {
-                    supportFragmentManager.beginTransaction().replace(R.id.main_container,
-                        MyPageFragment()).commit()
+                    supportFragmentManager.beginTransaction().replace(R.id.main_container, MyPageFragment()).commit()
                     true
                 }
                 else -> false
@@ -115,15 +116,19 @@ class MainActivity : AppCompatActivity() {
                     val diabetesRisk = data?.diabetesRisk
 
                     // 두 값 중 하나라도 null이면 true, 그렇지 않으면 false
-                    val showAnalysisFragment = diabetesRiskCheckDate == null || diabetesRisk == null
+                    val showAnalysisFragment = diabetesRiskCheckDate.isNullOrEmpty() || diabetesRisk == null
                     callback(showAnalysisFragment)
                 } else {
-                    callback(true) // API 오류 시 analysisFragment로 이동
+                    // API 오류 시 콜백 true로 설정하여 analysis1Fragment로 이동
+                    callback(true)
+                    Toast.makeText(this@MainActivity, "데이터를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<ResponseDTO<DiabetesCheck2DTO>>, t: Throwable) {
-                callback(true) // 네트워크 오류 시에도 null로 처리
+                // 네트워크 오류 시에도 null로 처리
+                callback(true)
+                Toast.makeText(this@MainActivity, "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
