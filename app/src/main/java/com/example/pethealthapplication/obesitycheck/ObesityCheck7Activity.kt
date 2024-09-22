@@ -2,9 +2,12 @@ package com.example.pethealthapplication.obesitycheck
 
 import android.content.Context
 import android.content.Intent
+import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.example.pethealthapplication.MainActivity
@@ -34,6 +37,10 @@ class ObesityCheck7Activity : AppCompatActivity() {
         obesityText = findViewById(R.id.obesity)
         kcalText = findViewById(R.id.kcal)
 
+        val normalCat = findViewById<ImageView>(R.id.normalCat)
+        val fatCat = findViewById<ImageView>(R.id.fatCat)
+        val thinCat = findViewById<ImageView>(R.id.thinCat)
+
         val sharedPreferences = this.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val petId = sharedPreferences.getString("PET_ID_KEY", null)
 
@@ -49,6 +56,21 @@ class ObesityCheck7Activity : AppCompatActivity() {
         petNameText2.text = petName
         obesityText.text = obesityDegree
         kcalText.text = recommendedCalories
+        when (obesityDegree) {
+            "정상" ->{
+                normalCat.visibility = View.VISIBLE
+                fatCat.visibility = View.GONE
+                thinCat.visibility = View.GONE
+            } "과체중" -> {
+            normalCat.visibility = View.GONE
+            fatCat.visibility = View.VISIBLE
+            thinCat.visibility = View.GONE
+            } "저체중" -> {
+            normalCat.visibility = View.GONE
+            fatCat.visibility = View.GONE
+            thinCat.visibility = View.VISIBLE
+            }
+        }
 
         //등록
         val registerButton = findViewById<Button>(R.id.registerBtn)
@@ -57,7 +79,7 @@ class ObesityCheck7Activity : AppCompatActivity() {
         }
 
         //홈으로 돌아가기
-        val closeButton = findViewById<Button>(R.id.closeButton)
+        val closeButton = findViewById<ImageView>(R.id.closeButton)
         closeButton.setOnClickListener {
             // 홈으로 이동
             val intent = Intent(this@ObesityCheck7Activity, MainActivity::class.java)

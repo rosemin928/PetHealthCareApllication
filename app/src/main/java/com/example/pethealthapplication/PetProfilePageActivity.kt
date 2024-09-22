@@ -113,8 +113,8 @@ class PetProfilePageActivity : AppCompatActivity() {
 
 
         // 품종 데이터를 배열로 정의
-        val dogBreeds = arrayOf("치와와", "푸들", "포메라니안", "말티즈", "비숑프리제")
-        val catBreeds = arrayOf("페르시안", "러시안블루", "코리안숏헤어", "터키쉬앙고라", "스코티쉬폴드")
+        val dogBreeds = arrayOf("치와와", "푸들(소형)", "포메", "말티즈", "비숑")
+        val catBreeds = arrayOf("페르시안", "러시안블루", "코숏", "터키쉬앙고라", "스코티쉬폴드")
 
         // Spinner에 원래 설정되어 있는 값 가져오기 (fetchPetProfile에서 설정된 값)
         val currentBreed = petBreedSpinner.selectedItem?.toString() ?: ""

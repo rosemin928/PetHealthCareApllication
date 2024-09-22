@@ -63,9 +63,6 @@ class MainActivity : AppCompatActivity() {
 
     fun setBottomNavigationView() {
 
-        val sharedPreferences = this.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-        val petId = sharedPreferences.getString("PET_ID_KEY", null)
-
         val diabetesApiService = DiabetesApiClient.getApiService(this)
 
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
@@ -79,6 +76,10 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.analysisFragment -> {
+                    // SharedPreferences에서 petId를 analysisFragment 버튼을 눌렀을 때 가져오도록 변경
+                    val sharedPreferences = this.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+                    val petId = sharedPreferences.getString("PET_ID_KEY", null)
+
                     // 조회 API 호출 후 데이터에 따라 프래그먼트 이동
                     checkDiabetesData(petId ?: "", diabetesApiService) { showAnalysisFragment ->
                         if (showAnalysisFragment) {

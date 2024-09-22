@@ -11,8 +11,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.example.pethealthapplication.dto.LoginDTO
+import com.example.pethealthapplication.dto.ResponseDTO
 import com.example.pethealthapplication.joinapi.JoinApiClient
 import com.example.pethealthapplication.loginapi.LoginApiClient
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiClient
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiService
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -65,6 +68,7 @@ class LoginActivity : AppCompatActivity() {
             val loginDTO = LoginDTO(userId, password)
 
             val loginApiService = LoginApiClient.getApiService(this) // Activity의 Context 전달
+            val petProfileApiService = PetProfileSummaryApiClient.getApiService(this)
             val call = loginApiService.login(loginDTO)
 
             call.enqueue(object : Callback<Void> {
@@ -109,4 +113,5 @@ class LoginActivity : AppCompatActivity() {
             })
         }
     }
+
 }

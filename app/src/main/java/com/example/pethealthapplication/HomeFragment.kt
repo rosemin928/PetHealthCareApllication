@@ -80,10 +80,20 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        // 레이아웃을 inflate하여 view를 생성합니다.
+        return inflater.inflate(R.layout.fragment_home, container, false)
+    }
 
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
+        super.onViewCreated(view, savedInstanceState)
+
+        val diagnosisText = view.findViewById<TextView>(R.id.diagnosisText)
+        val medicineText = view.findViewById<TextView>(R.id.medicineText)
+        val petKgText = view.findViewById<TextView>(R.id.petKgText)
+        val bloodSugarText = view.findViewById<TextView>(R.id.bloodSugarText)
+        val specialMemoText = view.findViewById<TextView>(R.id.specialMemoText)
 
         // 1. 반려동물 정보 요약 조회
         // onCreate 또는 onViewCreated 내 코드
@@ -94,34 +104,90 @@ class HomeFragment : Fragment() {
         val newPetAddArea = view.findViewById<RelativeLayout>(R.id.newPetAddArea)
         val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val userId = sharedPreferences.getString("USER_ID_KEY", null)
+
+        val petApiService = PetProfileSummaryApiClient.getApiService(requireContext())
+        val graphApiService = GraphApiClient.getApiService(requireContext())
+        val weightApiService = WeightApiClient.getApiService(requireContext())
+
         val petId = sharedPreferences.getString("PET_ID_KEY", null)
 
         Log.d("HomeFragment", "userId: $userId")
+        Log.d("HomeFragment", "petId: $petId")
+
 
         if (userId != null) {
-            // Retrofit API 서비스 가져오기
-            val apiService = PetProfileSummaryApiClient.getApiService(requireContext())
+            // SharedPreferences에서 petId 가져오기
+            val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+            val petId = sharedPreferences.getString("PET_ID_KEY", null)
 
-            // 사용자 ID로 petId 목록을 가져와 반려동물 정보를 드롭다운 메뉴에 추가하는 함수 호출
-            fetchPetIdsAndNames(userId, apiService)
+            if (petId == null) {
+                // petId가 없을 경우에만 첫 번째 petId를 가져오기
+                fetchFirstPetId(userId, petApiService) { firstPetId ->
+                    if (firstPetId != null) {
+                        // 첫 번째 petId로 UI 업데이트
+                        fetchPetProfileSummary(firstPetId, petApiService) { petProfile ->
+                            petProfile?.let {
+                                petNameText.text = it.petName
+                                petAgeText.text = "${it.age}살"
+                                petWeightText.text = "${it.currentWeight}kg"
+                            }
+                        }
 
-            // 기존의 첫 번째 petId로 요약 정보 조회
-            if (petId != null) {
-                fetchPetProfileSummary(petId, apiService) { petProfile ->
+                        // 선택 가능한 petId 목록 가져오기
+                        fetchPetIdsAndNames(userId, petApiService)
+
+                        if (memoDate == null) {
+
+                            memoDate = LocalDate.now()
+
+                            // 해당 petId로 추가 정보 조회
+                            fetchDailyReport(
+                                sharedPreferences,
+                                diagnosisText,
+                                medicineText,
+                                petKgText,
+                                bloodSugarText,
+                                specialMemoText
+                            )
+                        }
+
+                        recommendedCaloriesCheck(firstPetId, weightApiService) // 비만도 체크 조회
+                        fetchBloodSugarLevel(firstPetId, graphApiService) // 혈당 데이터 조회
+                    } else {
+                        Toast.makeText(requireContext(), "저장된 반려동물이 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                // SharedPreferences에 저장된 petId가 있는 경우, 이를 사용하여 UI 업데이트
+                fetchPetProfileSummary(petId, petApiService) { petProfile ->
                     petProfile?.let {
-                        // 첫 번째 반려동물의 UI 업데이트
                         petNameText.text = it.petName
                         petAgeText.text = "${it.age}살"
                         petWeightText.text = "${it.currentWeight}kg"
                     }
                 }
-            } else {
-                // petId가 없을 경우 처리
-                Toast.makeText(requireContext(), "저장된 반려동물이 없습니다.", Toast.LENGTH_SHORT).show()
+
+                // 선택 가능한 petId 목록 가져오기
+                fetchPetIdsAndNames(userId, petApiService)
+
+                // 해당 petId로 추가 정보 조회
+                fetchDailyReport(
+                    sharedPreferences,
+                    diagnosisText,
+                    medicineText,
+                    petKgText,
+                    bloodSugarText,
+                    specialMemoText
+                )
+
+                recommendedCaloriesCheck(petId, weightApiService) // 비만도 체크 조회
+                fetchBloodSugarLevel(petId, graphApiService) // 혈당 데이터 조회
             }
         } else {
             Toast.makeText(requireContext(), "User ID가 없습니다.", Toast.LENGTH_SHORT).show()
         }
+
+
 
 
 
@@ -138,6 +204,8 @@ class HomeFragment : Fragment() {
         // 3. 펫 변경 (드롭다운 메뉴 연결)
         val petNameArea = view.findViewById<LinearLayout>(R.id.petNameArea)
 
+        fetchPetIdsAndNames(userId ?: "", petApiService)
+
         // petNameArea 클릭 시, 드롭다운으로 반려동물 선택
         petNameArea.setOnClickListener {
             // 이미 정의된 showPetNameDropdown 함수로 드롭다운 메뉴 생성
@@ -150,10 +218,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 3. 그래프
-        val graphApiService = GraphApiClient.getApiService(requireContext())
-        val weightApiService = WeightApiClient.getApiService(requireContext())
-
+        // 4. 그래프
         val bloodSugarGraph = view.findViewById<TextView>(R.id.bloodSugarGraph)
         val weightGraph = view.findViewById<TextView>(R.id.weightGraph)
 
@@ -177,7 +242,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 4. 반려동물 프로필 정보 페이지로 이동
+        // 5. 반려동물 프로필 정보 페이지로 이동
         val profileEditButton = view.findViewById<ImageView>(R.id.profileEditBtn)
         profileEditButton.setOnClickListener {
             val intent = Intent(requireActivity(), PetProfilePageActivity::class.java)
@@ -186,7 +251,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 5. 비만도 체크 버튼
+        // 6. 비만도 체크 버튼
         obesityCheckArea = view.findViewById(R.id.obesityCheckArea)
         obesityCheckArea.setOnClickListener {
             val intent = Intent(requireActivity(), ObesityCheck0Activity::class.java)
@@ -195,7 +260,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 6. 하루 적정 칼로리 조회
+        // 7. 하루 적정 칼로리 조회
         obesityCheck = view.findViewById(R.id.obesityCheck)
         recommendCaloriesLayout = view.findViewById(R.id.recommendCaloriesLayout)
         recommendDateLayout = view.findViewById(R.id.recommendDateLayout)
@@ -209,7 +274,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 7. 목표 몸무게 설정 + 조회 + 삭제
+        // 8. 목표 몸무게 설정 + 조회 + 삭제
         // 목표 몸무게 저장 + 수정
         val targetWeightAddButton = view.findViewById<ImageView>(R.id.targetWeightAddBtn)
         val targetWeightEditButton = view.findViewById<ImageView>(R.id.targetWeightEditBtn)
@@ -277,7 +342,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 8. 메모 추가하기 & 수정하기 & 삭제하기
+        // 9. 메모 추가하기 & 수정하기 & 삭제하기
         //(1) memoDateSelect 누르면 날짜 선택
         val memoDateSelect = view.findViewById<LinearLayout>(R.id.memoDateSelect)
         val memoDateSelectText = view.findViewById<TextView>(R.id.memoDateSelectText)
@@ -290,23 +355,6 @@ class HomeFragment : Fragment() {
             currentDate.year,
             currentDate.monthValue,
             currentDate.dayOfMonth
-        )
-
-        // 메모 조회 텍스트뷰
-        val diagnosisText = view.findViewById<TextView>(R.id.diagnosisText)
-        val medicineText = view.findViewById<TextView>(R.id.medicineText)
-        val petKgText = view.findViewById<TextView>(R.id.petKgText)
-        val bloodSugarText = view.findViewById<TextView>(R.id.bloodSugarText)
-        val specialMemoText = view.findViewById<TextView>(R.id.specialMemoText)
-
-        // 오늘 날짜의 메모를 먼저 조회
-        fetchDailyReport(
-            sharedPreferences,
-            diagnosisText,
-            medicineText,
-            petKgText,
-            bloodSugarText,
-            specialMemoText
         )
 
         // DatePickerDialog를 통해 날짜를 선택할 때 업데이트
@@ -358,7 +406,7 @@ class HomeFragment : Fragment() {
 
 
 
-        // 9. 날짜별 산책 기록
+        // 10. 날짜별 산책 기록
         // (1) 캘린더 커스텀
         val dailyReportApiService = DailyReportApiClient.getApiService(requireContext())
         calendarView = view.findViewById(R.id.calendarView)
@@ -434,51 +482,10 @@ class HomeFragment : Fragment() {
             if (petId != null)
                 targetWalkingScheduleTimeDelete(petId,dailyReportApiService)
         }
-
-
-
-
-        return view
     }
 
 
     //*기능*
-    //반려동물 요약 정보 조회
-    private fun fetchPetProfileSummary(petId: String, apiService: PetProfileSummaryApiService) {
-        apiService.petProfileSummary(petId).enqueue(object : Callback<ResponseDTO<PetProfileSummaryDTO>> {
-                override fun onResponse(call: Call<ResponseDTO<PetProfileSummaryDTO>>, response: Response<ResponseDTO<PetProfileSummaryDTO>>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseDTO = response.body()
-                        val status = responseDTO?.status
-                        val message = responseDTO?.message
-                        val data = responseDTO?.data
-
-                        // 데이터 처리
-                        if (status == 200) {
-                            val petName = data?.petName
-                            val age = data?.age
-                            val currentWeight = data?.currentWeight
-
-                            // UI 업데이트
-                            petNameText.text = petName
-                            petAgeText.text = "${age.toString()}살"
-                            petWeightText.text = "${currentWeight.toString()}kg"
-                        } else {
-                            // 실패 시 메시지 처리
-                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        Toast.makeText(requireContext(), "응답 실패", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onFailure(call: Call<ResponseDTO<PetProfileSummaryDTO>>, t: Throwable) {
-                    Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-    }
-
-
     //메모 조회
     private fun fetchDailyReport(
         sharedPreferences: SharedPreferences,
@@ -657,17 +664,16 @@ class HomeFragment : Fragment() {
     //혈당 그래프를 업데이트
     private fun updateLineChartWithBloodSugar(entries: List<Entry>) {
         val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
-        val dataSet = LineDataSet(entries, "혈당 수치").apply {
+
+        // 만약 entries가 비어있으면 빈 MutableList를 생성해서 처리
+        val mutableEntries = if (entries.isEmpty()) mutableListOf(Entry(0f, 0f)) else entries.toMutableList()
+
+        val dataSet = LineDataSet(mutableEntries, "혈당 수치").apply {
             color = Color.parseColor("#FFBF00")
             setCircleColor(Color.parseColor("#FFBF00"))
             circleRadius = 5f
             lineWidth = 3f
             mode = LineDataSet.Mode.LINEAR
-        }
-
-        // 빈 데이터 처리 (데이터가 없을 경우 기본 틀을 그리기 위한 빈 데이터셋을 추가)
-        if (entries.isEmpty()) {
-            dataSet.addEntry(Entry(0f, 0f))
         }
 
         // x축 및 y축 범위 설정
@@ -679,8 +685,7 @@ class HomeFragment : Fragment() {
             setLabelCount(7, true) // 정확히 7개의 라벨을 설정
 
             // X축 라벨
-            valueFormatter =
-                IndexAxisValueFormatter(arrayOf("1", "2", "3", "4", "5", "6", "7"))
+            valueFormatter = IndexAxisValueFormatter(arrayOf("1", "2", "3", "4", "5", "6", "7"))
         }
 
         lineChart.axisLeft.apply {
@@ -749,17 +754,16 @@ class HomeFragment : Fragment() {
     //몸무게 그래프 업데이트
     private fun updateLineChartWithWeight(entries: List<Entry>, targetWeight: BigDecimal?) {
         val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
-        val dataSet = LineDataSet(entries, "몸무게").apply {
+
+        // 만약 entries가 비어있으면 빈 MutableList를 생성해서 처리
+        val mutableEntries = if (entries.isEmpty()) mutableListOf(Entry(0f, 0f)) else entries.toMutableList()
+
+        val dataSet = LineDataSet(mutableEntries, "몸무게").apply {
             color = Color.parseColor("#FFBF00")
             setCircleColor(Color.parseColor("#FFBF00"))
             circleRadius = 5f
             lineWidth = 3f
             mode = LineDataSet.Mode.LINEAR
-        }
-
-        // 빈 데이터 처리 (데이터가 없을 경우 기본 틀을 그리기 위한 빈 데이터셋을 추가)
-        if (entries.isEmpty()) {
-            dataSet.addEntry(Entry(0f, 0f))
         }
 
         // x축 및 y축 범위 설정
@@ -1341,5 +1345,31 @@ class HomeFragment : Fragment() {
         editor.apply()
     }
 
+    //반려동물 Id 조회
+    private fun fetchFirstPetId(userId: String, apiService: PetProfileSummaryApiService, callback: (String?) -> Unit) {
+        // 기존의 API 호출 코드
+        apiService.getPetIdByUserId(userId).enqueue(object : Callback<ResponseDTO<List<String>>> {
+            override fun onResponse(call: Call<ResponseDTO<List<String>>>, response: Response<ResponseDTO<List<String>>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val petIdList = response.body()?.data
+                    if (!petIdList.isNullOrEmpty()) {
+                        val firstPetId = petIdList.first()
+                        // SharedPreferences에 petId 저장
+                        val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+                        sharedPreferences.edit().putString("PET_ID_KEY", firstPetId).apply()
+                        callback(firstPetId) // 콜백 호출
+                    } else {
+                        callback(null) // petId가 없을 경우
+                    }
+                } else {
+                    callback(null) // 응답 실패
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<List<String>>>, t: Throwable) {
+                callback(null) // 네트워크 오류
+            }
+        })
+    }
 
 }

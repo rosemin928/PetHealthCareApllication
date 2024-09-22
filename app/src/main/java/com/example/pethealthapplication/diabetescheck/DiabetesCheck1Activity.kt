@@ -114,6 +114,8 @@ class DiabetesCheck1Activity : AppCompatActivity() {
                     if (status == 200) {
                         val waterIntake = data.toString()
 
+                        Log.d("DailyWaterIntake", "$data")
+
                         // UI 업데이트
                         dailyWaterIntakeText.text = waterIntake
                     } else {

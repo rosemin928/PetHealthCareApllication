@@ -8,16 +8,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.example.pethealthapplication.diabetesapi.DiabetesApiClient
 import com.example.pethealthapplication.diabetesapi.DiabetesApiService
 import com.example.pethealthapplication.diabetescheck.DiabetesCheck0Activity
 import com.example.pethealthapplication.dto.DiabetesCheck2DTO
+import com.example.pethealthapplication.dto.ObesityCheckDTO
 import com.example.pethealthapplication.dto.PetProfileSummaryDTO
+import com.example.pethealthapplication.dto.RecommendedKcalCheckDTO
+import com.example.pethealthapplication.dto.RecommendedKcalDTO
 import com.example.pethealthapplication.dto.ResponseDTO
+import com.example.pethealthapplication.obesitycheck.ObesityCheck7Activity
 import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiClient
 import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiService
+import com.example.pethealthapplication.weightapi.WeightApiClient
+import com.example.pethealthapplication.weightapi.WeightApiService
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,6 +36,9 @@ class Analysis2Fragment : Fragment() {
     private lateinit var dailyWaterIntakeText: TextView
     private lateinit var diabetesRiskText: TextView
     private lateinit var analysisDateText: TextView
+    private lateinit var dailyRecommendedCalories: TextView
+    private lateinit var happyDog: ImageView
+    private lateinit var sadDog: ImageView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,6 +52,7 @@ class Analysis2Fragment : Fragment() {
 
         val petApiService = PetProfileSummaryApiClient.getApiService(requireContext())
         val diabetesApiService = DiabetesApiClient.getApiService(requireContext())
+        val weightApiService = WeightApiClient.getApiService(requireContext())
 
         // 반려동물 이름 조회
         petNameText = view.findViewById(R.id.petNameText)
@@ -51,6 +62,8 @@ class Analysis2Fragment : Fragment() {
         // 당뇨 위험도 조회
         diabetesRiskText = view.findViewById(R.id.diabetesRiskText)
         analysisDateText = view.findViewById(R.id.analysisDateText)
+        happyDog = view.findViewById(R.id.happyDog)
+        sadDog = view.findViewById(R.id.sadDog)
         if (petId != null)
             diabetesCheck(petId, diabetesApiService)
 
@@ -59,7 +72,10 @@ class Analysis2Fragment : Fragment() {
         if (petId != null)
             dailyWaterIntakeCheck(petId, diabetesApiService)
 
-        //der 칼로리 조회 (*obesity가 없어서 계산을 할 수가 없는데 어떻게 할까...)
+        //하루 적정 칼로리 조회
+        dailyRecommendedCalories = view.findViewById(R.id.dailyRecommendedCalories)
+        if (petId != null)
+            recommendedCaloriesCheck(petId, weightApiService)
 
         //recommendedNote 조회
         val recommendedNoteText = view.findViewById<TextView>(R.id.recommendedNoteText)
@@ -160,6 +176,16 @@ class Analysis2Fragment : Fragment() {
                             else -> "당뇨 저위험군"
                         }
                         analysisDateText.text = diabetesRiskCheckDate
+                        when (diabetesRisk) {
+                            "당뇨 의심" -> {
+                                happyDog.visibility = View.GONE
+                                sadDog.visibility = View.VISIBLE
+                            }
+                            else -> {
+                                happyDog.visibility = View.VISIBLE
+                                sadDog.visibility = View.GONE
+                            }
+                        }
                     } else {
                         // 실패 시 메시지 처리
                         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
@@ -170,6 +196,35 @@ class Analysis2Fragment : Fragment() {
             }
 
             override fun onFailure(call: Call<ResponseDTO<DiabetesCheck2DTO>>, t: Throwable) {
+                Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    //하루 적정 칼로리 조회
+    private fun recommendedCaloriesCheck(petId: String, apiService: WeightApiService) {
+        apiService.recommendedCaloriesCheck(petId).enqueue(object : Callback<ResponseDTO<RecommendedKcalCheckDTO>> {
+            override fun onResponse(call: Call<ResponseDTO<RecommendedKcalCheckDTO>>, response: Response<ResponseDTO<RecommendedKcalCheckDTO>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseDTO = response.body()
+                    val status = responseDTO?.status
+                    val message = responseDTO?.message
+                    val data = responseDTO?.data
+
+                    if (status == 200) {
+                        val recommendedCalories = data?.recommendedCalories
+
+                        //UI 업데이트
+                        dailyRecommendedCalories.text = recommendedCalories?.toPlainString()
+                    } else {
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "서버 에러: ", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<RecommendedKcalCheckDTO>>, t: Throwable) {
                 Toast.makeText(requireContext(), "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })

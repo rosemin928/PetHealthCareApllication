@@ -1,10 +1,17 @@
 package com.example.pethealthapplication
 
+import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.TimePickerDialog
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -15,6 +22,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
 import com.example.pethealthapplication.dailyreportapi.DailyReportApiClient
 import com.example.pethealthapplication.dailyreportapi.DailyReportApiService
 import com.example.pethealthapplication.dto.ResponseDTO
@@ -88,6 +96,12 @@ class TargetWalkingTimeActivity : AppCompatActivity() {
         // 목표 산책 시각 & 시간 저장
         saveButton.setOnClickListener {
             updateWalkingTimeAndSchedule(petId ?: "", apiService)
+
+            // 산책 시간 15분 전 알림 설정
+            targetSchedule?.let { scheduleTime ->
+                scheduleDailyNotification(scheduleTime.minusMinutes(15))
+            }
+
             finish() // 홈화면으로 돌아가기
         }
 
@@ -256,4 +270,66 @@ class TargetWalkingTimeActivity : AppCompatActivity() {
         })
     }
 
+    // 매일 산책 15분 전에 알림 설정
+    private fun scheduleDailyNotification(alarmTime: LocalTime) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        // 알림을 받을 PendingIntent 생성
+        val intent = Intent(this, WalkReminderReceiver::class.java) // 알림 리시버 클래스
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 오늘의 알람 시간 계산
+        val now = Calendar.getInstance()
+        val alarmCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, alarmTime.hour)
+            set(Calendar.MINUTE, alarmTime.minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+
+            // 이미 시간이 지났다면 다음날로 설정
+            if (before(now)) {
+                add(Calendar.DATE, 1)
+            }
+        }
+
+        // 매일 반복 알람 설정
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP,
+            alarmCalendar.timeInMillis,
+            AlarmManager.INTERVAL_DAY,
+            pendingIntent
+        )
+    }
+}
+
+class WalkReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        // 알림을 생성하고 표시하는 코드 작성
+        createNotification(context)
+    }
+
+    private fun createNotification(context: Context) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationChannelId = "WALK_REMINDER_CHANNEL"
+
+        // 안드로이드 8.0 이상에서는 알림 채널이 필요
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                notificationChannelId,
+                "산책 알림",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, notificationChannelId)
+            .setContentTitle("산책 알림")
+            .setContentText("목표 산책 시간 15분 전입니다!")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(1, notification)
+    }
 }

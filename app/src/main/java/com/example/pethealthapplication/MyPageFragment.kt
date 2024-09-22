@@ -43,6 +43,12 @@ class MyPageFragment : Fragment() {
             startActivity(intent)
         }
 
+        val logout = view.findViewById<TextView>(R.id.logout)
+        logout.setOnClickListener {
+            val intent = Intent(requireActivity(), LogoutActivity::class.java)
+            startActivity(intent)
+        }
+
         return view
     }
 

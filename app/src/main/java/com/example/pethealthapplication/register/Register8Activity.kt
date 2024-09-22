@@ -1,18 +1,25 @@
 package com.example.pethealthapplication.register
 
+import android.app.AlarmManager
 import android.app.DatePickerDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.TextView
+import androidx.core.app.NotificationCompat
+import com.example.pethealthapplication.MainActivity
 import com.example.pethealthapplication.R
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalTime
-import org.threeten.bp.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 
 class Register8Activity : AppCompatActivity() {
@@ -124,6 +131,67 @@ class Register8Activity : AppCompatActivity() {
                 findViewById<TextView>(R.id.injection_text).text = "" // 다른 날짜 필드를 초기화
             }
             textView.text = String.format("%02d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+
+            // 알람 설정
+            scheduleNotificationForDate(selectedDate, isInjection)
         }, year, month, day).show()
+    }
+
+    // 인슐린 및 약물 투여 후 알람 설정
+    private fun scheduleNotificationForDate(selectedDate: LocalDate, isInjection: Boolean) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        // 알람을 받을 PendingIntent 생성
+        val intent = Intent(this, AlarmReceiver::class.java).apply {
+            putExtra("NOTIFICATION_TITLE", if (isInjection) "심장사상충 주사 알림" else "심장사상충 약 알림")
+            putExtra("NOTIFICATION_MESSAGE", if (isInjection) "심장사상충 접종 1년이 되었습니다." else "심장사상충 약 급여 한 달이 되었습니다.")
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, if (isInjection) 1 else 2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 알람 시간 계산
+        val alarmTime = if (isInjection) {
+            selectedDate.plusYears(1).atStartOfDay().atZone(ZoneId.systemDefault()).toEpochSecond() * 1000
+        } else {
+            selectedDate.plusMonths(1).atStartOfDay().atZone(ZoneId.systemDefault()).toEpochSecond() * 1000
+        }
+
+        // 알람 설정
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            alarmTime,
+            pendingIntent
+        )
+
+        Log.d("Register8Activity", if (isInjection) "인슐린 알람 설정" else "약물 알람 설정")
+    }
+}
+
+class AlarmReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Android 8.0 이상에서는 NotificationChannel 필요
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("heartworm_channel", "Heartworm Reminder", NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // 알림을 클릭하면 MainActivity로 이동
+        val notificationIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        // 알림 생성
+        val notification = NotificationCompat.Builder(context, "heartworm_channel")
+            .setSmallIcon(androidx.core.R.drawable.notification_bg)
+            .setContentTitle("심장사상충 알림")
+            .setContentText("심장사상충 접종 날짜입니다.")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(1, notification)
     }
 }

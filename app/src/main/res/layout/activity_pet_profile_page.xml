@@ -43,6 +43,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/dog_profile_icon"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:padding="20dp"
+                android:background="@drawable/circle_background"/>
+
             <TextView
                 android:id="@+id/petName"
                 android:layout_width="wrap_content"
@@ -51,7 +60,7 @@
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginTop="150dp"
+                android:layout_marginTop="40dp"
                 android:layout_marginStart="20dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -80,7 +89,8 @@
 
             <Spinner
                 android:id="@+id/petBreedSpinner"
-                android:layout_width="380dp"
+                android:layout_width="match_parent"
+                android:layout_marginHorizontal="20dp"
                 android:layout_height="55dp"
                 android:layout_marginTop="3dp"
                 android:layout_gravity="center_horizontal"
@@ -101,7 +111,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_margin="15dp"
                 android:layout_gravity="center_horizontal"
                 android:orientation="horizontal">
 
@@ -113,7 +123,7 @@
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"
                     android:text="남아"
-                    android:textColor="@color/white"
+                    android:textColor="@color/dark_gray"
                     android:textSize="20sp" />
 
                 <androidx.appcompat.widget.AppCompatButton
@@ -123,7 +133,7 @@
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"
                     android:text="여아"
-                    android:textColor="@color/white"
+                    android:textColor="@color/dark_gray"
                     android:textSize="20sp" />
 
             </LinearLayout>
@@ -186,6 +196,7 @@
                 android:hint="반려동물 나이">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/petAgeText"
+                    android:inputType="numberDecimal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -209,6 +220,7 @@
                 android:hint="반려동물 몸무게">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/petWeightText"
+                    android:inputType="numberDecimal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -239,7 +251,7 @@
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"
                     android:text="당뇨 있음"
-                    android:textColor="@color/white"
+                    android:textColor="@color/dark_gray"
                     android:textSize="20sp" />
 
                 <androidx.appcompat.widget.AppCompatButton
@@ -249,7 +261,7 @@
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"
                     android:text="당뇨 없음"
-                    android:textColor="@color/white"
+                    android:textColor="@color/dark_gray"
                     android:textSize="20sp" />
 
             </LinearLayout>

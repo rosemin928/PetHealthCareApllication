@@ -15,7 +15,7 @@ class Register0Activity : AppCompatActivity() {
         val register_button = findViewById<Button>(R.id.register_button)
 
         register_button.setOnClickListener {
-            val intent = Intent(this@Register0Activity, Register1Activity::class.java)
+            val intent = Intent(this@Register0Activity, Register2Activity::class.java)
 
             startActivity(intent)
         }
