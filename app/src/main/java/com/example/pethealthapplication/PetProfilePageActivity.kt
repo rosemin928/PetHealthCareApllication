@@ -21,10 +21,13 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import com.example.pethealthapplication.dto.PetProfileDTO
+import com.example.pethealthapplication.dto.PetProfileSummaryDTO
 import com.example.pethealthapplication.dto.PetProfileUpdateDTO
 import com.example.pethealthapplication.dto.ResponseDTO
 import com.example.pethealthapplication.petprofileapi.PetProfileApiClient
 import com.example.pethealthapplication.petprofileapi.PetProfileApiService
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiClient
+import com.example.pethealthapplication.petprofilesummary.PetProfileSummaryApiService
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -36,6 +39,8 @@ import java.util.Calendar
 
 class PetProfilePageActivity : AppCompatActivity() {
 
+    private lateinit var dogProfileIcon: ImageView
+    private lateinit var catProfileIcon: ImageView
     private lateinit var petNameText: EditText
     private lateinit var petBreedSpinner: Spinner
     private lateinit var petAgeText: EditText
@@ -61,6 +66,7 @@ class PetProfilePageActivity : AppCompatActivity() {
     private var genderSelectedButton: Button? = null
     private var diabetesSelectedButton: Button? = null
     private var neuteredSelectedButton: RadioButton? = null
+    private var petBreedSelected: String? = null
 
     private val calendar = Calendar.getInstance()
     private val hour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -76,6 +82,8 @@ class PetProfilePageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pet_profile_page)
 
+        dogProfileIcon = findViewById(R.id.dogProfileIcon)
+        catProfileIcon = findViewById(R.id.catProfileIcon)
         petNameText = findViewById(R.id.petNameText)
         petBreedSpinner = findViewById(R.id.petBreedSpinner)
         petAgeText = findViewById(R.id.petAgeText)
@@ -105,40 +113,27 @@ class PetProfilePageActivity : AppCompatActivity() {
         val petId = sharedPreferences.getString("PET_ID_KEY", null)
 
         val apiService = PetProfileApiClient.getApiService(this)
+        val petSummaryApiService = PetProfileSummaryApiClient.getApiService(this)
+
+
+        //반려동물 프로필 사진
+        if (petId != null) {
+            petProfileSummaryCheck(petId, petSummaryApiService) {petProfile ->
+                petProfile?.let {
+                    if (it.animalType == "Dog") {
+                        dogProfileIcon.visibility = View.VISIBLE
+                        catProfileIcon.visibility = View.GONE
+                    } else {
+                        dogProfileIcon.visibility = View.GONE
+                        catProfileIcon.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
 
         //반려동물 프로필 조회
         if (petId != null)
             fetchPetProfile(petId, apiService)
-
-
-
-        // 품종 데이터를 배열로 정의
-        val dogBreeds = arrayOf("치와와", "푸들(소형)", "포메", "말티즈", "비숑")
-        val catBreeds = arrayOf("페르시안", "러시안블루", "코숏", "터키쉬앙고라", "스코티쉬폴드")
-
-        // Spinner에 원래 설정되어 있는 값 가져오기 (fetchPetProfile에서 설정된 값)
-        val currentBreed = petBreedSpinner.selectedItem?.toString() ?: ""
-
-        // 어댑터를 설정할 배열을 결정
-        val breedArray = if (dogBreeds.contains(currentBreed)) {
-            dogBreeds
-        } else if (catBreeds.contains(currentBreed)) {
-            catBreeds
-        } else {
-            // 기본적으로 dogBreeds 배열을 사용하거나 필요에 따라 다른 처리를 추가할 수 있습니다.
-            dogBreeds
-        }
-
-        // Spinner에 어댑터 설정
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, breedArray)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        petBreedSpinner.adapter = adapter
-
-        // Spinner의 선택된 값을 currentBreed로 설정
-        val currentBreedPosition = breedArray.indexOf(currentBreed)
-        if (currentBreedPosition >= 0) {
-            petBreedSpinner.setSelection(currentBreedPosition)
-        }
 
 
 
@@ -318,74 +313,77 @@ class PetProfilePageActivity : AppCompatActivity() {
                         val heartWormShotDate = data?.heartwormShotDate
                         val heartWormMedicineDate = data?.heartwormMedicineDate
 
-                        // UI 업데이트
-                        petNameText.setText(petName)
+                        Log.e("PetProfile", "API response data: ${data?.breed}")
 
-                        // Spinner의 선택된 품종을 설정
-                        val breedPosition = (petBreedSpinner.adapter as ArrayAdapter<String>).getPosition(breed)
-                        petBreedSpinner.setSelection(breedPosition)
+                        if (breed!!.isNotEmpty()) {
+                            // 이후 UI 업데이트 코드
+                            updateBreedSpinner(breed)
 
-                        petAgeText.setText(age.toString())
-                        petWeightText.setText(currentWeight.toString())
+                            // UI 업데이트
+                            petNameText.setText(petName)
 
-                        when (gender?.lowercaseChar()) {
-                            'f' -> handleGenderButtonClick(femaleButton)
-                            'm' -> handleGenderButtonClick(maleButton)
-                        }
+                            petAgeText.setText(age.toString())
+                            petWeightText.setText(currentWeight.toString())
 
-                        when (isNeutered) {
-                            true -> handleNeuteredButtonClick(yesNeutered)
-                            false -> handleNeuteredButtonClick(noNeutered)
-                            null -> {
-                                yesNeutered.isChecked = false
-                                noNeutered.isChecked = false
+                            when (gender?.lowercaseChar()) {
+                                'f' -> handleGenderButtonClick(femaleButton)
+                                'm' -> handleGenderButtonClick(maleButton)
                             }
-                        }
 
-                        when (hasDiabetes) {
-                            true -> handleDiabetesButtonClick(yesDiabetes)
-                            false -> handleDiabetesButtonClick(noDiabetes)
-                            null -> {
-                                yesDiabetes.isSelected = false
-                                noDiabetes.isSelected = false
+                            when (isNeutered) {
+                                true -> handleNeuteredButtonClick(yesNeutered)
+                                false -> handleNeuteredButtonClick(noNeutered)
+                                null -> {
+                                    yesNeutered.isChecked = false
+                                    noNeutered.isChecked = false
+                                }
                             }
-                        }
 
-                        if (insulinTime1 != null) {
-                            insulinTime1Text.text = insulinTime1          // insulinTime1 값을 텍스트로 설정
-                        } else {
-                            insulinTime1Text.text = null
-                        }
-
-                        if (insulinTime2 != null) {
-                            insulinTime2Text.text = insulinTime2          // insulinTime1 값을 텍스트로 설정
-                        } else {
-                            insulinTime2Text.text = null
-                        }
-
-                        if (insulinTime3 != null) {
-                            insulinTime3Text.text = insulinTime3          // insulinTime1 값을 텍스트로 설정
-                        } else {
-                            insulinTime3Text.text = null
-                        }
-
-                        // 심장사상충 주사/약 접종 날짜 UI 업데이트
-                        when {
-                            (heartWormShotDate != null) -> {
-                                Log.d("PetProfilePageActivity", "HeartWormShotDate: $heartWormShotDate")
-                                injection.isChecked = true
-                                injectionText.text = heartWormShotDate.toString()
+                            when (hasDiabetes) {
+                                true -> handleDiabetesButtonClick(yesDiabetes)
+                                false -> handleDiabetesButtonClick(noDiabetes)
+                                null -> {
+                                    yesDiabetes.isSelected = false
+                                    noDiabetes.isSelected = false
+                                }
                             }
-                            (heartWormMedicineDate != null) -> {
-                                medicine.isChecked = true
-                                medicineText.text = heartWormMedicineDate.toString()
+
+                            if (insulinTime1 != null) {
+                                insulinTime1Text.text = insulinTime1          // insulinTime1 값을 텍스트로 설정
+                            } else {
+                                insulinTime1Text.text = null
                             }
-                            else -> {
-                                Log.d("PetProfilePageActivity", "HeartWormShotDate: $heartWormShotDate")
-                                injection.isChecked = false
-                                medicine.isChecked = false
-                                injectionText.text = null
-                                medicineText.text = null
+
+                            if (insulinTime2 != null) {
+                                insulinTime2Text.text = insulinTime2          // insulinTime1 값을 텍스트로 설정
+                            } else {
+                                insulinTime2Text.text = null
+                            }
+
+                            if (insulinTime3 != null) {
+                                insulinTime3Text.text = insulinTime3          // insulinTime1 값을 텍스트로 설정
+                            } else {
+                                insulinTime3Text.text = null
+                            }
+
+                            // 심장사상충 주사/약 접종 날짜 UI 업데이트
+                            when {
+                                (heartWormShotDate != null) -> {
+                                    Log.d("PetProfilePageActivity", "HeartWormShotDate: $heartWormShotDate")
+                                    injection.isChecked = true
+                                    injectionText.text = heartWormShotDate.toString()
+                                }
+                                (heartWormMedicineDate != null) -> {
+                                    medicine.isChecked = true
+                                    medicineText.text = heartWormMedicineDate.toString()
+                                }
+                                else -> {
+                                    Log.d("PetProfilePageActivity", "HeartWormShotDate: $heartWormShotDate")
+                                    injection.isChecked = false
+                                    medicine.isChecked = false
+                                    injectionText.text = null
+                                    medicineText.text = null
+                                }
                             }
                         }
 
@@ -432,6 +430,14 @@ class PetProfilePageActivity : AppCompatActivity() {
             LocalTime.parse(it, DateTimeFormatter.ISO_LOCAL_TIME)
         }
 
+        val heartWormShotDate = injectionText.text.toString().takeIf { it.isNotBlank() }?.let {
+            LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        }
+
+        val heartWormMedicineDate = medicineText.text.toString().takeIf { it.isNotBlank() }?.let {
+            LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        }
+
         // 날짜 형식을 정의합니다.
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -446,8 +452,8 @@ class PetProfilePageActivity : AppCompatActivity() {
             insulinTime1?.toString() ?: "",
             insulinTime2?.toString() ?: "",
             insulinTime3?.toString() ?: "",
-            heartWormShotDate?.format(dateFormatter) ?: "",  // 날짜 형식을 yyyy-MM-dd로 변환
-            heartWormMedicineDate?.format(dateFormatter) ?: ""  // 날짜 형식을 yyyy-MM-dd로 변환
+            heartWormShotDate?.toString() ?: "",  // 날짜 형식을 yyyy-MM-dd로 변환
+            heartWormMedicineDate?.toString() ?: ""  // 날짜 형식을 yyyy-MM-dd로 변환
         )
 
         // API 호출을 통한 업데이트 요청
@@ -541,6 +547,65 @@ class PetProfilePageActivity : AppCompatActivity() {
                 onTimeSet(hourOfDay, minute)
             }, hour, min, true
         ).show()
+    }
+
+    //반려동물 프로필 요약 조회(프로필 사진 변경을 위함)
+    private fun petProfileSummaryCheck(petId: String, apiService: PetProfileSummaryApiService, onFetchComplete: (PetProfileSummaryDTO?) -> Unit) {
+        apiService.petProfileSummary(petId).enqueue(object : Callback<ResponseDTO<PetProfileSummaryDTO>> {
+            override fun onResponse(call: Call<ResponseDTO<PetProfileSummaryDTO>>, response: Response<ResponseDTO<PetProfileSummaryDTO>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseDTO = response.body()
+                    val status = responseDTO?.status
+                    val message = responseDTO?.message
+                    val data = responseDTO?.data
+
+                    // 데이터 처리
+                    if (status == 200) {
+                        onFetchComplete(data)
+                    } else {
+                        // 실패 시 메시지 처리
+                        Toast.makeText(this@PetProfilePageActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this@PetProfilePageActivity, "응답 실패", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseDTO<PetProfileSummaryDTO>>, t: Throwable) {
+                Toast.makeText(
+                    this@PetProfilePageActivity, "네트워크 오류: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    //반려동물 품종 스피너
+    private fun updateBreedSpinner(petBreedSelected: String) {
+        // 품종 데이터를 배열로 정의
+        val dogBreeds = arrayOf("치와와", "푸들(소형)", "포메", "말티즈", "비숑")
+        val catBreeds = arrayOf("페르시안", "러시안블루", "코숏", "터키쉬앙고라", "스코티쉬폴드")
+
+        // breed 로그 찍어서 값 확인
+        Log.e("PetProfile", "Selected breed before updating spinner: $petBreedSelected")
+
+        // 어댑터를 설정할 배열을 결정 (빈 값일 때도 기본 처리 추가)
+        val breedArray = when {
+            dogBreeds.contains(petBreedSelected) -> dogBreeds
+            catBreeds.contains(petBreedSelected) -> catBreeds
+            else -> dogBreeds // 기본값으로 dogBreeds 설정
+        }
+
+        // Spinner에 어댑터 설정
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, breedArray)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        petBreedSpinner.adapter = adapter
+
+        // Spinner의 선택된 값을 currentBreed로 설정
+        val currentBreedPosition = breedArray.indexOf(petBreedSelected)
+        if (currentBreedPosition >= 0) {
+            petBreedSpinner.setSelection(currentBreedPosition)
+        } else {
+            Log.e("PetProfile", "Breed not found in spinner options")
+        }
     }
 
 }

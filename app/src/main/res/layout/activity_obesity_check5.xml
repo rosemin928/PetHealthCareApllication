@@ -59,9 +59,22 @@
 
 
     <ImageView
+        android:id="@+id/dogBcs"
         android:layout_width="300dp"
         android:layout_height="240dp"
         android:src="@drawable/dog_bcs"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.299" />
+
+    <ImageView
+        android:id="@+id/catBcs"
+        android:layout_width="340dp"
+        android:layout_height="250dp"
+        android:src="@drawable/cat_bcs"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"

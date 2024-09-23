@@ -63,6 +63,8 @@ class HomeFragment : Fragment() {
     private lateinit var petNameText: TextView
     private lateinit var petAgeText: TextView
     private lateinit var petWeightText: TextView
+    private lateinit var dogProfileIcon: ImageView
+    private lateinit var catProfileIcon: ImageView
 
     private lateinit var obesityCheck: TextView
     private lateinit var obesityCheckArea: RelativeLayout
@@ -70,6 +72,7 @@ class HomeFragment : Fragment() {
     private lateinit var recommendDateLayout: LinearLayout
     private lateinit var recommendedKcal: TextView
     private lateinit var recommendedDate: TextView
+    private lateinit var memoDateSelectText: TextView
 
     private lateinit var calendarView: MaterialCalendarView
 
@@ -100,6 +103,8 @@ class HomeFragment : Fragment() {
         petNameText = view.findViewById(R.id.petName)
         petAgeText = view.findViewById(R.id.petAge)
         petWeightText = view.findViewById(R.id.petWeight)
+        dogProfileIcon = view.findViewById(R.id.dogProfileIcon)
+        catProfileIcon = view.findViewById(R.id.catProfileIcon)
 
         val newPetAddArea = view.findViewById<RelativeLayout>(R.id.newPetAddArea)
         val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
@@ -116,9 +121,6 @@ class HomeFragment : Fragment() {
 
 
         if (userId != null) {
-            // SharedPreferences에서 petId 가져오기
-            val sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-            val petId = sharedPreferences.getString("PET_ID_KEY", null)
 
             if (petId == null) {
                 // petId가 없을 경우에만 첫 번째 petId를 가져오기
@@ -130,26 +132,30 @@ class HomeFragment : Fragment() {
                                 petNameText.text = it.petName
                                 petAgeText.text = "${it.age}살"
                                 petWeightText.text = "${it.currentWeight}kg"
+
+                                if (it.animalType == "Dog") {
+                                    dogProfileIcon.visibility = View.VISIBLE
+                                    catProfileIcon.visibility = View.GONE
+                                } else {
+                                    dogProfileIcon.visibility = View.GONE
+                                    catProfileIcon.visibility = View.VISIBLE
+                                }
                             }
                         }
 
                         // 선택 가능한 petId 목록 가져오기
                         fetchPetIdsAndNames(userId, petApiService)
 
-                        if (memoDate == null) {
-
-                            memoDate = LocalDate.now()
-
-                            // 해당 petId로 추가 정보 조회
-                            fetchDailyReport(
-                                sharedPreferences,
-                                diagnosisText,
-                                medicineText,
-                                petKgText,
-                                bloodSugarText,
-                                specialMemoText
-                            )
-                        }
+                        // 해당 petId로 추가 정보 조회 (오늘 날짜 메모)
+                        memoDate = LocalDate.now()
+                        fetchDailyReport(
+                            sharedPreferences,
+                            diagnosisText,
+                            medicineText,
+                            petKgText,
+                            bloodSugarText,
+                            specialMemoText
+                        )
 
                         recommendedCaloriesCheck(firstPetId, weightApiService) // 비만도 체크 조회
                         fetchBloodSugarLevel(firstPetId, graphApiService) // 혈당 데이터 조회
@@ -164,13 +170,22 @@ class HomeFragment : Fragment() {
                         petNameText.text = it.petName
                         petAgeText.text = "${it.age}살"
                         petWeightText.text = "${it.currentWeight}kg"
+
+                        if (it.animalType == "Dog") {
+                            dogProfileIcon.visibility = View.VISIBLE
+                            catProfileIcon.visibility = View.GONE
+                        } else {
+                            dogProfileIcon.visibility = View.GONE
+                            catProfileIcon.visibility = View.VISIBLE
+                        }
                     }
                 }
 
                 // 선택 가능한 petId 목록 가져오기
                 fetchPetIdsAndNames(userId, petApiService)
 
-                // 해당 petId로 추가 정보 조회
+                // 해당 petId로 추가 정보 조회 (오늘 날짜 메모)
+                memoDate = LocalDate.now()
                 fetchDailyReport(
                     sharedPreferences,
                     diagnosisText,
@@ -345,7 +360,7 @@ class HomeFragment : Fragment() {
         // 9. 메모 추가하기 & 수정하기 & 삭제하기
         //(1) memoDateSelect 누르면 날짜 선택
         val memoDateSelect = view.findViewById<LinearLayout>(R.id.memoDateSelect)
-        val memoDateSelectText = view.findViewById<TextView>(R.id.memoDateSelectText)
+        memoDateSelectText = view.findViewById(R.id.memoDateSelectText)
 
         // 오늘 날짜를 기본값으로 설정
         val currentDate = LocalDate.now()
@@ -425,6 +440,7 @@ class HomeFragment : Fragment() {
 
             calendarView.addDecorator(CalendarDecorators.getTodayDecorator(requireContext()))
             calendarView.addDecorator(CalendarDecorators.getSelectedMonthDecorator(newMonth.month, requireContext()))
+            fetchWalkingRecordsAndApplyDots(petId ?: "", calendarView, dailyReportApiService, requireContext())
         }
 
 
@@ -1205,7 +1221,6 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val responseDTO = response.body()
                     val status = responseDTO?.status
-                    val message = responseDTO?.message
                     val data = responseDTO?.data
 
                     val targetWalkingResult = data?.targetWalkingResult

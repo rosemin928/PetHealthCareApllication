@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import com.example.pethealthapplication.R
@@ -114,7 +115,9 @@ class ObesityCheck6Activity : AppCompatActivity() {
                         Toast.makeText(this@ObesityCheck6Activity, message, Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Unknown error"
                     Toast.makeText(this@ObesityCheck6Activity, "서버 에러: ", Toast.LENGTH_SHORT).show()
+                    Log.e("ObesityCheck6Activity", "Error: ${response.code()}, Message: $errorMessage")
                 }
             }
 

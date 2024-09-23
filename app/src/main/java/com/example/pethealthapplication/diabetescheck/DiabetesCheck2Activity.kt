@@ -5,7 +5,9 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.example.pethealthapplication.R
@@ -21,6 +23,8 @@ import retrofit2.Response
 import java.math.BigDecimal
 
 class DiabetesCheck2Activity : AppCompatActivity() {
+
+    private lateinit var moreInfo: ImageView
 
     private var foodIntakeButton: Button? = null
     private var dailyFoodIntake: String? = null
@@ -41,8 +45,21 @@ class DiabetesCheck2Activity : AppCompatActivity() {
         val lessIntake = findViewById<Button>(R.id.less)
         val derCaloriesText = findViewById<TextView>(R.id.derCaloriesText)
         petNameText = findViewById(R.id.petNameText)
+        moreInfo = findViewById(R.id.moreInfo)
+        val moreInfoText = findViewById<TextView>(R.id.moreInfoText)
 
         val nextButton = findViewById<Button>(R.id.nextBtn)
+
+        // ImageView 클릭 리스너 설정
+        moreInfo.setOnClickListener {
+            if (moreInfoText.visibility == View.GONE) {
+                // 텍스트뷰가 보이지 않으면 보이게 설정
+                moreInfoText.visibility = View.VISIBLE
+            } else {
+                // 텍스트뷰가 보이면 다시 안 보이게 설정
+                moreInfoText.visibility = View.GONE
+            }
+        }
 
 
         //정보 받아오기

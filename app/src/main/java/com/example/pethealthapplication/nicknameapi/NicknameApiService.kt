@@ -4,6 +4,7 @@ import com.example.pethealthapplication.dto.ResponseDTO
 import com.example.pethealthapplication.dto.UpdateNicknameDTO
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.Path
@@ -14,4 +15,9 @@ interface NicknameApiService {
         @Path("userId") userId: String,
         @Body updateNicknameDTO: UpdateNicknameDTO
     ): Call<ResponseDTO<Any>>
+
+    @GET("/users/{userId}/nickname")
+    fun nicknameCheck(
+        @Path("userId") userId: String
+    ): Call<ResponseDTO<String>>
 }

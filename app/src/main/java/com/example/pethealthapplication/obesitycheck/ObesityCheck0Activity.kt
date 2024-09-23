@@ -45,6 +45,7 @@ class ObesityCheck0Activity : AppCompatActivity() {
                     // 1. 표준 체중이 average이고 비만도가 null일 경우
                     if (standardWeightCheckText == "average" && isObesityWeight == null) {
                         val intent = Intent(this@ObesityCheck0Activity, ObesityCheck6Activity::class.java)
+                        intent.putExtra("WEIGHT_STATUS", "average")
                         startActivity(intent)
 
                     // 2. 표준 체중이 over 또는 under이며 비만도가 null일 경우
@@ -53,7 +54,7 @@ class ObesityCheck0Activity : AppCompatActivity() {
                         startActivity(intent)
 
                     // 3. 비만도가 null이 아닌 경우
-                    } else if (isObesityWeight != null && isObesityWeight == currentWeightText) {
+                    } else if (isObesityWeight != null) {
                         val intent = Intent(this@ObesityCheck0Activity, ObesityCheck2Activity::class.java)
                         startActivity(intent)
                     }
