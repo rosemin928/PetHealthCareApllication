@@ -98,6 +98,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
+                R.id.snsFragment -> {
+                    supportFragmentManager.beginTransaction().replace(R.id.main_container, SnsFragment()).commit()
+                    true
+                }
                 R.id.myPageFragment -> {
                     supportFragmentManager.beginTransaction().replace(R.id.main_container, MyPageFragment()).commit()
                     true

@@ -705,8 +705,8 @@ class HomeFragment : Fragment() {
         }
 
         lineChart.axisLeft.apply {
-            axisMinimum = 40f  // y축 최소값
-            axisMaximum = 100f  // y축 최대값
+            axisMinimum = 50f  // y축 최소값
+            axisMaximum = 350f  // y축 최대값
         }
 
         // 오른쪽 y축 숨기기

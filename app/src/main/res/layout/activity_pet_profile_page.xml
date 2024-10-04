@@ -128,13 +128,14 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="15dp"
+                android:layout_marginVertical="15dp"
+                android:layout_marginHorizontal="20dp"
                 android:layout_gravity="center_horizontal"
                 android:orientation="horizontal">
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/male"
-                    android:layout_width="180dp"
+                    android:layout_width="160dp"
                     android:layout_height="40dp"
                     android:layout_marginEnd="20dp"
                     android:background="@drawable/button_color_drawable"
@@ -145,7 +146,7 @@
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/female"
-                    android:layout_width="180dp"
+                    android:layout_width="160dp"
                     android:layout_height="40dp"
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"
@@ -256,13 +257,14 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
+                android:layout_marginVertical="10dp"
+                android:layout_marginHorizontal="20dp"
                 android:layout_gravity="center_horizontal"
                 android:orientation="horizontal">
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/yesDiabetes"
-                    android:layout_width="180dp"
+                    android:layout_width="160dp"
                     android:layout_height="40dp"
                     android:layout_marginEnd="20dp"
                     android:background="@drawable/button_color_drawable"
@@ -273,7 +275,7 @@
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/noDiabetes"
-                    android:layout_width="180dp"
+                    android:layout_width="160dp"
                     android:layout_height="40dp"
                     android:background="@drawable/button_color_drawable"
                     android:gravity="center"

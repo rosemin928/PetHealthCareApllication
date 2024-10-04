@@ -17,6 +17,11 @@
         android:icon="@drawable/navi_analysis"/>
 
     <item
+        android:id="@+id/snsFragment"
+        android:title="산책자랑"
+        android:icon="@drawable/navi_walk"/>
+
+    <item
         android:id="@+id/myPageFragment"
         android:title="마이페이지"
         android:icon="@drawable/navi_mypage"/>

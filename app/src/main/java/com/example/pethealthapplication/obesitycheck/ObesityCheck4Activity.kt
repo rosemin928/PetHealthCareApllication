@@ -10,6 +10,7 @@ class ObesityCheck4Activity : AppCompatActivity() {
 
     private var ribTouchableButton: Button? = null
     private var ribTouchability: Char? = null
+    private lateinit var nextButton: Button  // 변경: nextButton을 전역으로 선언
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,12 +26,10 @@ class ObesityCheck4Activity : AppCompatActivity() {
 
         //버튼 중복 클릭 금지
         yesButton.setOnClickListener {
-            handleRibTouchableButtonClick(yesButton)
-            ribTouchability = 'y'
+            handleRibTouchableButtonClick(yesButton, 'y')
         }
         noButton.setOnClickListener {
-            handleRibTouchableButtonClick(noButton)
-            ribTouchability = 'n'
+            handleRibTouchableButtonClick(noButton, 'n')
         }
 
         //다음 화면으로 넘어가기 + 정보 넘기기
@@ -44,15 +43,22 @@ class ObesityCheck4Activity : AppCompatActivity() {
     }
 
     //버튼 중복 클릭 금지 이벤트
-    private fun handleRibTouchableButtonClick(button: Button) {
+    private fun handleRibTouchableButtonClick(button: Button, touchability: Char) {
         if (button == ribTouchableButton) {
             button.isSelected = false
             ribTouchableButton = null
+            ribTouchability = null
         }
         else {
             ribTouchableButton?.isSelected = false
             button.isSelected = true
             ribTouchableButton = button
+            ribTouchability = touchability
         }
+    }
+
+    // yesButton 또는 noButton이 눌렸을 때만 nextButton 활성화
+    private fun enableNextButton() {
+        nextButton.isEnabled = ribTouchability != null
     }
 }

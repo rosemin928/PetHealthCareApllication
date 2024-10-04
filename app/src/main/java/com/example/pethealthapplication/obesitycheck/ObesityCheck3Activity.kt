@@ -24,6 +24,7 @@ class ObesityCheck3Activity : AppCompatActivity() {
     private var waistRibVisibleButton: Button? = null
     private var standardWeightCheckText: String? = null
     private var waistRibVisibility: Char? = null
+    private lateinit var nextButton: Button  // 변경: nextButton을 전역으로 선언
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +34,7 @@ class ObesityCheck3Activity : AppCompatActivity() {
         val petWeightText = findViewById<TextView>(R.id.petWeightText)
         val yesButton = findViewById<Button>(R.id.yes)
         val noButton = findViewById<Button>(R.id.no)
-        val nextButton = findViewById<Button>(R.id.nextBtn)
+        nextButton = findViewById(R.id.nextBtn)
 
         val sharedPreferences = this.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val petId = sharedPreferences.getString("PET_ID_KEY", null)
@@ -56,12 +57,10 @@ class ObesityCheck3Activity : AppCompatActivity() {
 
         //버튼 중복 클릭 금지
         yesButton.setOnClickListener {
-            handleWaistRibVisibleButtonClick(yesButton)
-            waistRibVisibility = 'y'
+            handleWaistRibVisibleButtonClick(yesButton, 'y')
         }
         noButton.setOnClickListener {
-            handleWaistRibVisibleButtonClick(noButton)
-            waistRibVisibility = 'n'
+            handleWaistRibVisibleButtonClick(noButton, 'n')
         }
 
         //다음 화면으로 넘어가기 + 정보 넘기기
@@ -134,16 +133,28 @@ class ObesityCheck3Activity : AppCompatActivity() {
         })
     }
 
-    //버튼 중복 클릭 금지 이벤트
-    private fun handleWaistRibVisibleButtonClick(button: Button) {
+    // 버튼 중복 클릭 금지 및 선택 상태에 따른 동작
+    private fun handleWaistRibVisibleButtonClick(button: Button, visibility: Char) {
         if (button == waistRibVisibleButton) {
+            // 동일한 버튼을 다시 클릭하면 선택 해제
             button.isSelected = false
             waistRibVisibleButton = null
-        }
-        else {
+            waistRibVisibility = null
+        } else {
+            // 다른 버튼이 선택되면 기존 선택 해제 후 새로 선택
             waistRibVisibleButton?.isSelected = false
             button.isSelected = true
             waistRibVisibleButton = button
+            waistRibVisibility = visibility
         }
+
+        // 버튼 선택 상태에 따라 nextButton 활성화 여부 결정
+        enableNextButton()
+    }
+
+
+    // yesButton 또는 noButton이 눌렸을 때만 nextButton 활성화
+    private fun enableNextButton() {
+        nextButton.isEnabled = waistRibVisibility != null
     }
 }
