@@ -19,7 +19,9 @@
         android:theme="@style/Theme.PetHealthApplication"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-
+        <activity
+            android:name=".SnsWriteActivity"
+            android:exported="false" />
         <activity
             android:name=".LogoutActivity"
             android:exported="false" />
