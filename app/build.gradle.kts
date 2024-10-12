@@ -62,4 +62,5 @@ dependencies {
     implementation ("com.jakewharton.threetenabp:threetenabp:1.3.1")
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation ("com.github.prolificinteractive:material-calendarview:2.0.1")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
 }
