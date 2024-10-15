@@ -3,15 +3,17 @@ package com.example.pethealthapplication
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
+import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pethealthapplication.nicknameapi.NicknameHeaderInterceptor
+import com.example.pethealthapplication.snsapi.SnsApiClient
 import com.example.pethealthapplication.snsapi.SnsApiService
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -37,37 +39,29 @@ class SnsFragment : Fragment() {
         }
 
         // 서버에서 게시글 데이터 가져오기
-        fetchPosts()
+        fetchPosts(page = 0, size = 8)  // 첫 페이지, 8개 게시글 요청
 
         return view
     }
 
-    private fun fetchPosts() {
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(NicknameHeaderInterceptor(requireContext())) // 인터셉터 추가
-            .build()
-
-        val apiService = Retrofit.Builder()
-            .baseUrl("http://ec2-13-124-65-7.ap-northeast-2.compute.amazonaws.com:8080/")
-            .client(okHttpClient)  // OkHttpClient를 추가
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(SnsApiService::class.java)
+    private fun fetchPosts(page: Int, size: Int) {
+        val apiService = SnsApiClient.getApiService(requireContext())
 
         lifecycleScope.launch {
             try {
-                // 최신 8개 게시글 불러오기
-                val response = apiService.getLatestPosts()
+                // 최신 게시글 페이징 요청
+                val response = apiService.getLatestPosts(page, size)
                 if (response.status == 200) {
                     snsAdapter = SnsAdapter(response.data)
                     recyclerView.adapter = snsAdapter
                 } else {
                     Log.e("SnsFragment", "Error: ${response.message}")
+                    Toast.makeText(requireContext(), "게시물 불러오기 실패: ${response.message}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e("SnsFragment", "Error fetching posts", e)
+                Toast.makeText(requireContext(), "게시물 불러오기 중 오류 발생", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
 }

@@ -55,6 +55,8 @@ class ObesityCheck4Activity : AppCompatActivity() {
             ribTouchableButton = button
             ribTouchability = touchability
         }
+
+        enableNextButton()
     }
 
     // yesButton 또는 noButton이 눌렸을 때만 nextButton 활성화

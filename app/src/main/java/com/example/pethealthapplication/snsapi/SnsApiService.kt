@@ -1,9 +1,15 @@
 package com.example.pethealthapplication.snsapi
 
+import com.example.pethealthapplication.dto.CommentRequestDTO
+import com.example.pethealthapplication.dto.CommentResponseDTO
 import com.example.pethealthapplication.dto.ImagePostResponseDTO
 import com.example.pethealthapplication.dto.ResponseDTO
+import com.example.pethealthapplication.dto.ResponseListDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.Call
+import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -20,9 +26,25 @@ interface SnsApiService {
         @Part image: MultipartBody.Part?
     ): ResponseDTO<Any>
 
-    @GET("/walking-post/post")  // 예시: 게시글을 가져오는 엔드포인트
+    @GET("/walking-post/post")
     suspend fun getLatestPosts(
-        @Query("limit") limit: Int = 8,  // 최신 8개의 게시글만 요청
-        @Query("sort") sort: String = "desc"  // 최신순 정렬
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+        @Query("sort") sort: String = "desc"
     ): ImagePostResponseDTO
+
+    @POST("/walking-post/{userId}/{walkingPostId}/comment")
+    suspend fun submitComment(
+        @Path("userId") userId: String,
+        @Path("walkingPostId") walkingPostId: String,
+        @Body comment: CommentRequestDTO // JSON 객체로 전송
+    ): ResponseDTO<Any>
+
+    @GET("/walking-post/{walkingPostId}/comment")
+    suspend fun getComments(
+        @Path("walkingPostId") walkingPostId: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+        @Query("sort") sort: String = "desc"
+    ): Response<ResponseListDTO<CommentResponseDTO>>
 }
